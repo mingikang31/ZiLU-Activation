@@ -3,12 +3,9 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
 import time 
 
 from utils import set_seed
-
-
 
 def Train_Eval(args, 
                model: nn.Module, 
@@ -20,11 +17,7 @@ def Train_Eval(args,
         set_seed(args.seed)
     
     if args.criterion == 'CrossEntropy':
-        if args.layer == "ConvNNAttention" or args.layer == "ConvNN":
-            # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
-            criterion = nn.CrossEntropyLoss()
-        else: 
-            criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss()
     elif args.criterion == 'MSE':
         criterion = nn.MSELoss()
 

@@ -13,6 +13,7 @@ from dataset import CIFAR10, CIFAR100, ImageNet
 
 # Models 
 from vgg import VGG
+from resnet import ResNet
 from vit import ViT
 
 
@@ -76,6 +77,9 @@ def args_parser():
 
 
 def main(args):
+
+    # Resize False 
+    args.resize = False
     
     # Dataset 
     if args.dataset == "cifar10":
@@ -108,6 +112,8 @@ def main(args):
         model = VGG(args, features_config=features_config, dropout=0.5)
 
     # ResNet
+    if args.model == "resnet18" or args.model == "resnet50":
+        model = ResNet(args)        
 
     # ViT 
     if args.model == "vit-tiny":
@@ -120,7 +126,7 @@ def main(args):
         args.attention_dropout = 0.1
         model = ViT(args)
 
-
+    model.to(args.device)
     print(f"Model: {model.name}")
 
     # Parameters

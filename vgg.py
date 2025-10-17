@@ -5,6 +5,18 @@ import torch.nn.functional as F
 
 from activation import GELU_a, SiLU_a, ZiLU
 
+
+r"""
+@software{torchvision2016,
+    title        = {TorchVision: PyTorch's Computer Vision library},
+    author       = {TorchVision maintainers and contributors},
+    year         = 2016,
+    journal      = {GitHub repository},
+    publisher    = {GitHub},
+    howpublished = {\url{https://github.com/pytorch/vision}}
+}
+"""
+
 class VGG(nn.Module):
     def __init__(
         self, 
@@ -90,3 +102,8 @@ class VGG(nn.Module):
         total_params = sum(p.numel() for p in self.parameters())
         trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         return total_params, trainable_params
+
+
+
+
+    

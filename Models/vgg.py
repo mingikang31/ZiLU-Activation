@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn 
 import torch.nn.functional as F
 
-from activation import GELU_a, SiLU_a, ZiLU
+from Models.activation import GELU_a, SiLU_a, ZiLU
 
 
 r"""

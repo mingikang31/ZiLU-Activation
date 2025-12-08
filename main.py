@@ -12,9 +12,9 @@ from train_eval import Train_Eval
 from dataset import CIFAR10, CIFAR100, ImageNet
 
 # Models 
-from vgg import VGG
-from resnet import ResNet
-from vit import ViT
+from Models.vgg import VGG
+from Models.resnet import ResNet
+from Models.vit import ViT
 
 
 # Utils 

@@ -7,7 +7,7 @@ from torchsummary import summary
 import numpy as np
 
 # Activation Functions 
-from activation import ZiLU, SiLU_a, GELU_a
+from Models.activation import ZiLU, SiLU_a, GELU_a
 
 '''VGG Model Class'''
 class ViT(nn.Module): 

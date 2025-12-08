@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F 
 from types import SimpleNamespace
 
-from activation import GELU_a, SiLU_a, ZiLU
+from Models.activation import GELU_a, SiLU_a, ZiLU
 
 class ResNet(nn.Module):
     def __init__(self, args):

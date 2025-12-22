@@ -1,10 +1,10 @@
-
 import torch 
 import torch.nn as nn 
 import torch.nn.functional as F
 
-from Models.activation import GELU_a, SiLU_a, ZiLU
-
+# Activation Functions 
+from Models.activation import (GELU_s, SiLU_s, ZiLU_Old, ArcTan,
+                               ArcTan_Approx, ZiLU, ZiLU_Approx)
 
 r"""
 @software{torchvision2016,
@@ -53,6 +53,33 @@ class VGG(nn.Module):
 
         layers = [] 
 
+        # Activation Selection
+        self.activation = args.activation
+
+        # Activation function mapping
+        activation_map = {
+            "relu": lambda: nn.ReLU(inplace=args.inplace), 
+            "silu": lambda: nn.SiLU(inplace=args.inplace), 
+            "gelu": lambda: nn.GELU(), 
+            "sigmoid": lambda: nn.Sigmoid(), 
+
+            # Previous Activation Generation
+            "gelu_s": lambda: GELU_s(sigma=args.sigma, inplace=args.inplace), 
+            "silu_s": lambda: SiLU_s(sigma=args.sigma, inplace=args.inplace), 
+            "zilu_old": lambda: ZiLU_Old(sigma=args.sigma, inplace=args.inplace), 
+
+            # Current Activation Generation 
+            "arctan": lambda: ArcTan(sigma=args.sigma), 
+            "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
+            "zilu": lambda: ZiLU(sigma=args.sigma), 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma) 
+        }
+
+        if self.activation not in activation_map:
+            raise ValueError(f"Unsupported activation function: {self.activation}")
+            
+        self.activation_function = activation_map[self.activation]()
+
         for v in cfg[features_config]:
             if v == "M":
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
@@ -60,18 +87,7 @@ class VGG(nn.Module):
                 layers += [nn.Conv2d(in_channels, v, kernel_size=3, stride=1, padding=1), 
                          nn.BatchNorm2d(v)]
 
-                if self.activation == "zilu": 
-                    layers += [ZiLU(s=args.s, inplace=args.inplace)]
-                if self.activation == "silu_a": 
-                    layers += [SiLU_a(a=args.a, inplace=args.inplace)]
-                if self.activation == "gelu_a": 
-                    layers += [GELU_a(a=args.a, inplace=args.inplace)]
-                if self.activation == "relu": 
-                    layers += [nn.ReLU(inplace=args.inplace)]
-                if self.activation == "silu": 
-                    layers += [nn.SiLU(inplace=args.inplace)]
-                if self.activation == "gelu": 
-                    layers += [nn.GELU()]
+                layers += [activation_map[self.activation]()]
                         
                 in_channels = v
 
@@ -89,7 +105,6 @@ class VGG(nn.Module):
         )
 
         self.to(self.args.device)
-
 
     def forward(self, x):
         x = self.features(x)

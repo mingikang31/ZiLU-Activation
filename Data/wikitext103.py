@@ -65,3 +65,60 @@ if __name__ == '__main__':
         arr.flush()
 
     print(f"Dataset preparation complete! Files saved as train.bin and val.bin")
+
+
+
+
+
+'''NEW CODE'''
+
+
+### Fom reference.py
+import torch 
+from transformers.file_utils import cached_path
+from transformers import BertTokenizer
+import tqdm 
+from torch.utils.data import DataLoader
+
+# Download and tokenize wikitext-103 training dataset 
+
+data_path = "./Data/wikitext-103-dataset"
+
+
+# Tokenizer 
+tokenizer = BertTokenizer.from_pretrained('bert-base-cased', do_lower_case=False) 
+
+if os.path.isfile(data_path): 
+    dataset = torch.load(data_path)
+else: 
+    dataset_file = cached_path("https://s3.amazonaws.com/datasets.huggingface.co/wikitext-103/wiki.train.tokens")
+
+    # Open Data 
+    with open(dataset_file, "r", encoding="utf-8") as f: 
+        dataset = f.readlines() 
+
+    dataset = list(
+        tokenizer.convert_tokens_to_ids(
+            tokenizer.tokenize(
+                line.strip(' ').replace('\n', '[SEP]').replace('<unk>', '[UNK]') for line in tqdm(dataset)
+            )
+        )
+    )    
+
+    # Convert dataset to torch tensor 
+    dataset = torch.tensor([index for line in dataset for index in line], dtype = torch.long) 
+
+    torch.save(dataset, data_path)
+
+
+train_dataloader = DataLoader(dataset, batch_size=128, shuffle=True) 
+
+
+# Training Loop 
+for batch in train_dataloader:
+    batch = batch.transpose(0, 1).contiguous().to('cuda') # shape [Sequence_Length, Batch]
+
+    logits, loss = model(batch, labels=batch) 
+
+
+

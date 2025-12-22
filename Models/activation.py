@@ -3,70 +3,127 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 """
-F.relu()
-F.gelu()
-F.silu()
+GELU with adjustable parameter a
+SiLU with adjustable parameter a
+ZiLU with adjustable parameter s
 """
+class GELU_s(nn.Module):
+    def __init__(self, sigma, inplace=False, max_val=1000):
+        super(GELU_s, self).__init__()
 
-class GELU_a(nn.Module):
-    def __init__(self, a, inplace=False, max_val=1000):
-        super(GELU_a, self).__init__()
-
-        self.a = a
+        self.sigma = sigma
         self.max_val = max_val
         self.kAlpha = 0.70710678118654752440
         self.relu = nn.ReLU(inplace=inplace) 
 
     def forward(self, x):
-        if self.a >= self.max_val:
+        if self.sigma >= self.max_val:
             return self.relu(x) 
         else: 
-            return x * 0.5 * (1 + torch.erf(self.a * x * self.kAlpha))
+            return x * 0.5 * (1 + torch.erf(self.sigma * x * self.kAlpha))
 
-class SiLU_a(nn.Module):
-    def __init__(self, a, inplace=False, max_val=1000):
-        super(SiLU_a, self).__init__()
-
-        self.a = a
+class SiLU_s(nn.Module):
+    def __init__(self, sigma, inplace=False, max_val=1000):
+        super(SiLU_s, self).__init__()
+        self.sigma = sigma
         self.max_val = max_val
         self.relu = nn.ReLU(inplace=inplace)
         
     def forward(self, x):
-        if self.a >= self.max_val:
+        if self.sigma >= self.max_val:
             return self.relu(x)
         else:
-            return x * torch.sigmoid(self.a * x)
+            return x * torch.sigmoid(self.sigma * x)
+
+class ZiLU_Old(nn.Module):
+    def __init__(self, sigma, inplace=False, max_val=1000):
+        super(ZiLU_Old, self).__init__()
+
+        self.sigma = sigma
+        self.max_val = max_val
+        self.relu = nn.ReLU(inplace=inplace)
+
+    def forward(self, x):
+        if self.sigma >= self.max_val:
+            return self.relu(x)
+        else:
+            return x * (2 * (1/4 + 1/(2 * torch.pi) * torch.arctan(self.sigma * x)))
+
+"""
+arctan 
+arctan approximation 
+ZiLU
+ZiLU approximation
+"""
+
+class ArcTan(nn.Module):
+    def __init__(self, sigma=None):
+        super(ArcTan, self).__init__()
+        if sigma: 
+            self.sigma = sigma
+        else: 
+            self.sigma = nn.Parameter(torch.tensor(5.0))
+
+    def forward(self, x):
+        return 0.5 + (1.0 / torch.pi) * torch.arctan(self.sigma * x)
+
+class ArcTan_Approx(nn.Module):
+    def __init__(self, sigma=None):
+        super(ArcTan_Approx, self).__init__()
+        if sigma: 
+            self.sigma = sigma
+        else: 
+            self.sigma = nn.Parameter(torch.tensor(5.0))
+
+    def forward(self, x): 
+        z = self.sigma * x 
+        return (0.5 + torch.clamp(z, min=0)) / (1.0 + torch.abs(z))
 
 class ZiLU(nn.Module):
-    def __init__(self, s, inplace=False, max_val=1000):
+    def __init__(self, sigma=None):
         super(ZiLU, self).__init__()
-
-        self.s = s
-        self.max_val = max_val
-        self.relu = nn.ReLU(inplace=inplace)
-
-    def forward(self, x):
-        if self.s >= self.max_val:
-            return self.relu(x)
-        else:
-            return x * (2 * (1/4 + 1/(2 * torch.pi) * torch.arctan(self.s * x)))
+        self.arctan = ArcTan(sigma)
         
+    def forward(self, x):
+        return x * self.arctan(x)
 
-"""Zai's old code """
-def gelu_a_zai(x, a=1):
-    if a >= 1000:
-        return F.relu(x)
-    kAlpha = 0.70710678118654752440
-    return x * 0.5 * (1 + torch.erf(a * x * kAlpha))
-
-def silu_a_zai(x, a=1):
-    if a >= 1000:
-        return F.relu(x)
-    return x * torch.sigmoid(a * x)
-
-def zilu_zai(x, s=1):
-    if s >= 1000:
-        return F.relu(x)
-    return x * (2 * (1/4 + 1/(2 * torch.pi) * torch.arctan(s * x)))
+class ZiLU_Approx(nn.Module):
+    def __init__(self, sigma=None):
+        super(ZiLU_Approx, self).__init__()
+        self.arctan_approx = ArcTan_Approx(sigma)
+        
+    def forward(self, x):
+        return x * self.arctan_approx(x)
 
 
+
+if __name__ == "__main__":
+        
+    # Activation Selection
+    activation = "zilu"
+    inplace = True
+    sigma = 1.0
+
+    # Activation function mapping
+    activation_map = {
+        "relu": lambda: nn.ReLU(inplace=inplace), 
+        "silu": lambda: nn.SiLU(inplace=inplace), 
+        "gelu": lambda: nn.GELU(), 
+        "sigmoid": lambda: nn.Sigmoid(), 
+
+        # Previous Activation Generation
+        "gelu_s": lambda: GELU_s(sigma=sigma, inplace=inplace), 
+        "silu_s": lambda: SiLU_s(sigma=sigma, inplace=inplace), 
+        "zilu_old": lambda: ZiLU_Old(sigma=sigma, inplace=inplace), 
+
+        # Current Activation Generation 
+        "arctan": lambda: ArcTan(sigma=sigma), 
+        "arctan_approx": lambda: ArcTan_Approx(sigma=sigma), 
+        "zilu": lambda: ZiLU(sigma=sigma), 
+        "zilu_approx": lambda: ZiLU_Approx(sigma=sigma) 
+    }
+
+    if activation not in activation_map:
+        raise ValueError(f"Unsupported activation function: {activation}")
+        
+    activation_function = activation_map[activation]()

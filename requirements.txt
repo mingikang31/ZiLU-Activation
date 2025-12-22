@@ -1,8 +1,11 @@
 datasets
 transformers
 tokenizers
+tiktoken
 numpy
 matplotlib
 tqdm
 torch
 torchvision
+pytorch-ignite
+pytorch-lightning

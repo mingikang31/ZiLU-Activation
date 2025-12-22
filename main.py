@@ -1,43 +1,40 @@
 """Main File for ZiLU Activation Function"""
-
-
 import argparse 
 from pathlib import Path 
 import os 
-
 import torch 
 
 # Datasets and Eval 
 from train_eval import Train_Eval
-from dataset import CIFAR10, CIFAR100, ImageNet
+from dataset import CIFAR10, CIFAR100
 
 # Models 
 from Models.vgg import VGG
 from Models.resnet import ResNet
 from Models.vit import ViT
 
-
 # Utils 
 from utils import write_to_file, set_seed
-
-# Activation Functions
-
 
 def args_parser():
     parser = argparse.ArgumentParser(description="Activation Function Experiments")
 
     # Model Args 
-    parser.add_argument('--activation', type=str, default='zilu', choices=['relu', 'gelu', 'silu', 'gelu_a', 'silu_a', 'zilu'], help='Activation function to use')
-    parser.add_argument('--a', type=float, default=1.0, help='Parameter a for gelu_a and silu_a')
-    parser.add_argument('--s', type=float, default=1.0, help='Parameter s for zilu')
+    parser.add_argument('--activation', type=str, default='zilu', choices=['relu', 'gelu', 'silu', 'sigmoid', 'gelu_s', 'silu_s', 'zilu_old', 'arctan', 'arctan_approx', 'zilu', 'zilu_approx'], help='Activation function to use')
+    parser.add_argument('--sigma', type=float, default=None, help='Sigma parameter for ZiLU activation function')
     parser.add_argument('--inplace', action='store_true', help='Use inplace activation functions')
     parser.set_defaults(inplace=False)
 
-    parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet50', 'vit-tiny'], help='Model architecture')
+    parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-large'], help='Model architecture')
 
     # Arguments for Data 
-    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100", 'imagenet'], help="Dataset to use for training and evaluation")
+    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100"], help="Dataset to use for training and evaluation")
+    parser.add_argument("--resize", type=int, default=None, help="Resize images to 224x224")
+    parser.add_argument("--augment", action="store_true", help="Use data augmentation")
+    parser.set_defaults(augment=False)
+    parser.add_argument("--noise", type=float, default=0.0, help="Standard deviation of Gaussian noise to add to the data")
     parser.add_argument("--data_path", type=str, default="./Data", help="Path to the dataset")
+
         
     # Training Arguments
     parser.add_argument("--batch_size", type=int, default=128, help="Batch size for training and evaluation")
@@ -90,10 +87,6 @@ def main(args):
         dataset = CIFAR100(args)
         args.num_classes = dataset.num_classes 
         args.img_size = dataset.img_size 
-    elif args.dataset == "imagenet":
-        dataset = ImageNet(args)
-        args.num_classes = dataset.num_classes 
-        args.img_size = dataset.img_size
     else:
         raise ValueError("Dataset not supported")
 
@@ -125,6 +118,13 @@ def main(args):
         args.dropout = 0.1
         args.attention_dropout = 0.1
         model = ViT(args)
+    elif args.model == "vit-small":
+        pass 
+    elif args.model == "vit-medium": 
+        pass 
+    elif args.model == "vit-large": 
+        pass 
+    
 
     model.to(args.device)
     print(f"Model: {model.name}")

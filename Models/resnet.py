@@ -3,7 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F 
 from types import SimpleNamespace
 
-from Models.activation import GELU_a, SiLU_a, ZiLU
+# Activation Functions 
+from Models.activation import (GELU_s, SiLU_s, ZiLU_Old, ArcTan,
+                               ArcTan_Approx, ZiLU, ZiLU_Approx)
 
 class ResNet(nn.Module):
     def __init__(self, args):
@@ -18,26 +20,38 @@ class ResNet(nn.Module):
         
         self.name = f"{args.model} - {args.activation}"
 
+        # Activation Selection
         self.activation = args.activation
 
-        # Activation selection
-        if self.activation == "zilu": 
-            self.activation1 = ZiLU(s=args.s, inplace=args.inplace)
-        if self.activation == "silu_a": 
-            self.activation1 = SiLU_a(a=args.a, inplace=args.inplace)
-        if self.activation == "gelu_a": 
-            self.activation1 = GELU_a(a=args.a, inplace=args.inplace)
-        if self.activation == "relu": 
-            self.activation1 = nn.ReLU(inplace=args.inplace)
-        if self.activation == "silu": 
-            self.activation1 = nn.SiLU(inplace=args.inplace)
-        if self.activation == "gelu": 
-            self.activation1 = nn.GELU()
+        # Activation function mapping
+        self.activation_map = {
+            "relu": lambda: nn.ReLU(inplace=args.inplace), 
+            "silu": lambda: nn.SiLU(inplace=args.inplace), 
+            "gelu": lambda: nn.GELU(), 
+            "sigmoid": lambda: nn.Sigmoid(), 
+
+            # Previous Activation Generation
+            "gelu_s": lambda: GELU_s(sigma=args.sigma, inplace=args.inplace), 
+            "silu_s": lambda: SiLU_s(sigma=args.sigma, inplace=args.inplace), 
+            "zilu_old": lambda: ZiLU_Old(sigma=args.sigma, inplace=args.inplace), 
+
+            # Current Activation Generation 
+            "arctan": lambda: ArcTan(sigma=args.sigma), 
+            "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
+            "zilu": lambda: ZiLU(sigma=args.sigma), 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma) 
+        }
+
+        if self.activation not in self.activation_map:
+            raise ValueError(f"Unsupported activation function: {self.activation}")
+            
+        self.activation_fist_conv = self.activation_map[self.activation]()
+
 
         self.first_conv = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64), 
-            self.activation1,
+            self.activation_fist_conv,
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
 
@@ -114,33 +128,34 @@ class ResBlock(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
+        # Activation Selection
         self.activation = args.activation
 
-        # Activation selection
-        if self.activation == "zilu": 
-            self.activation1 = ZiLU(s=args.s, inplace=args.inplace)
-            self.activation2 = ZiLU(s=args.s, inplace=args.inplace)
-            self.activation3 = ZiLU(s=args.s, inplace=args.inplace)
-        if self.activation == "silu_a": 
-            self.activation1 = SiLU_a(a=args.a, inplace=args.inplace)
-            self.activation2 = SiLU_a(a=args.a, inplace=args.inplace)
-            self.activation3 = SiLU_a(a=args.a, inplace=args.inplace)
-        if self.activation == "gelu_a": 
-            self.activation1 = GELU_a(a=args.a, inplace=args.inplace)
-            self.activation2 = GELU_a(a=args.a, inplace=args.inplace)
-            self.activation3 = GELU_a(a=args.a, inplace=args.inplace)
-        if self.activation == "relu": 
-            self.activation1 = nn.ReLU(inplace=args.inplace)
-            self.activation2 = nn.ReLU(inplace=args.inplace)
-            self.activation3 = nn.ReLU(inplace=args.inplace)
-        if self.activation == "silu": 
-            self.activation1 = nn.SiLU(inplace=args.inplace)
-            self.activation2 = nn.SiLU(inplace=args.inplace)
-            self.activation3 = nn.SiLU(inplace=args.inplace)
-        if self.activation == "gelu": 
-            self.activation1 = nn.GELU()
-            self.activation2 = nn.GELU()
-            self.activation3 = nn.GELU()
+        # Activation function mapping
+        self.activation_map = {
+            "relu": lambda: nn.ReLU(inplace=args.inplace), 
+            "silu": lambda: nn.SiLU(inplace=args.inplace), 
+            "gelu": lambda: nn.GELU(), 
+            "sigmoid": lambda: nn.Sigmoid(), 
+
+            # Previous Activation Generation
+            "gelu_s": lambda: GELU_s(sigma=args.sigma, inplace=args.inplace), 
+            "silu_s": lambda: SiLU_s(sigma=args.sigma, inplace=args.inplace), 
+            "zilu_old": lambda: ZiLU_Old(sigma=args.sigma, inplace=args.inplace), 
+
+            # Current Activation Generation 
+            "arctan": lambda: ArcTan(sigma=args.sigma), 
+            "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
+            "zilu": lambda: ZiLU(sigma=args.sigma), 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma) 
+        }
+
+        if self.activation not in self.activation_map:
+            raise ValueError(f"Unsupported activation function: {self.activation}")
+
+        self.activation1 = self.activation_map[self.activation]()
+        self.activation2 = self.activation_map[self.activation]()
+        self.activation3 = self.activation_map[self.activation]() 
 
 
         self.layer1 = nn.Sequential(

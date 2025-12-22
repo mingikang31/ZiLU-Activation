@@ -1,1 +1,0 @@
-"""ConvNet architectures. NOT IN USE CURRENTLY."""

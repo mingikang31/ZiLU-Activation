@@ -6,23 +6,28 @@ Original Code from OpenAI's GPT-2 repository, written in TensorFlow.
 https://github.com/openai/gpt-2/blob/master/src/model.py
 """
 
-
 import math
 import torch 
 import torch.nn as nn 
 import torch.nn.functional as F 
 
+# Activation Functions 
+from Models.activation import (GELU_s, SiLU_s, ZiLU_Old, ArcTan,
+                               ArcTan_Approx, ZiLU, ZiLU_Approx)
 
 class GPT2(nn.Module):
     def __init__(self, 
-                vocab_size=50257, 
-                max_seq_length=1024,
-                embedding_dim=768,
-                num_attention_heads=12,
-                num_layers=12,
-                device='cuda'):
+                 args, 
+                 vocab_size=50257, 
+                 max_seq_length=1024,
+                 embedding_dim=768,
+                 num_attention_heads=12,
+                 num_layers=12,
+                 device='cuda'):
 
         super(GPT2, self).__init__()
+
+        self.args = args 
 
         self.vocab_size = vocab_size
         self.max_seq_length = max_seq_length
@@ -37,7 +42,7 @@ class GPT2(nn.Module):
         
         # Transformer Blocks    
         self.transformer_blocks = nn.ModuleList([
-            TransformerBlock(embedding_dim, num_attention_heads, embedding_dim * 4, max_seq_length)
+            TransformerBlock(args, embedding_dim, num_attention_heads, embedding_dim * 4, max_seq_length)
             for _ in range(num_layers)
         ])
 
@@ -144,11 +149,38 @@ class CausalMultiHeadAttention(nn.Module):
         return attn_output
 
 class MLP(nn.Module):
-    def __init__(self, d_model, d_ff):
+    def __init__(self, args, d_model, d_ff):
         super(MLP, self).__init__() 
+
+         # Activation Selection
+        self.activation = args.activation
+
+        # Activation function mapping
+        self.activation_map = {
+            "relu": lambda: nn.ReLU(inplace=args.inplace), 
+            "silu": lambda: nn.SiLU(inplace=args.inplace), 
+            "gelu": lambda: nn.GELU(), 
+            "sigmoid": lambda: nn.Sigmoid(), 
+
+            # Previous Activation Generation
+            "gelu_s": lambda: GELU_s(sigma=args.sigma, inplace=args.inplace), 
+            "silu_s": lambda: SiLU_s(sigma=args.sigma, inplace=args.inplace), 
+            "zilu_old": lambda: ZiLU_Old(sigma=args.sigma, inplace=args.inplace), 
+
+            # Current Activation Generation 
+            "arctan": lambda: ArcTan(sigma=args.sigma), 
+            "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
+            "zilu": lambda: ZiLU(sigma=args.sigma), 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma) 
+        }
+
+        if self.activation not in self.activation_map:
+            raise ValueError(f"Unsupported activation function: {self.activation}")
+            
+        
         self.fc1 = nn.Linear(d_model, d_ff)
         self.fc2 = nn.Linear(d_ff, d_model)
-        self.activation = nn.GELU()
+        self.activation_function = self.activation_map[self.activation]()
 
     def forward(self, x):
         x = self.fc1(x)
@@ -157,10 +189,10 @@ class MLP(nn.Module):
         return x
 
 class TransformerBlock(nn.Module):
-    def __init__(self, d_model, num_heads, d_ff, max_seq_length):
+    def __init__(self, args, d_model, num_heads, d_ff, max_seq_length):
         super(TransformerBlock, self).__init__()
         self.attention = CausalMultiHeadAttention(d_model, num_heads, max_seq_length)
-        self.mlp = MLP(d_model, d_ff)
+        self.mlp = MLP(args, d_model, d_ff)
         self.layer_norm1 = nn.LayerNorm(d_model)
         self.layer_norm2 = nn.LayerNorm(d_model)
 

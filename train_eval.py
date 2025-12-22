@@ -183,6 +183,15 @@ def Train_Eval(args,
     
     return epoch_results
         
+def Train_Eval_GPT(args, 
+                   model: nn.Module, 
+                   train_loader, 
+                   test_loader
+                   ):
+    if args.seed != 0:
+        set_seed(args.seed) 
+
+    
 
 def accuracy(output, target, topk=(1,)):
     """Computes the top-1 and top-5 accuracy of the model."""
@@ -192,3 +201,5 @@ def accuracy(output, target, topk=(1,)):
     pred = pred.t()
     correct = pred.eq(target.reshape(1, -1).expand_as(pred))
     return [correct[:min(k, maxk)].reshape(-1).float().sum(0) * 100. / batch_size for k in topk] # [72.5, 91.3] - [top1, top5]
+
+

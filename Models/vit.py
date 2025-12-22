@@ -7,33 +7,43 @@ from torchsummary import summary
 import numpy as np
 
 # Activation Functions 
-from Models.activation import ZiLU, SiLU_a, GELU_a
+from Models.activation import (GELU_s, SiLU_s, ZiLU_Old, ArcTan,
+                               ArcTan_Approx, ZiLU, ZiLU_Approx)
 
 '''VGG Model Class'''
 class ViT(nn.Module): 
-    def __init__(self, args): 
+    def __init__(self, args, d_hidden, d_mlp, num_heads, n_layers, dropout, attention_dropout, img_size, patch_size, n_classes): 
         super(ViT, self).__init__()
-        assert args.img_size[1] % args.patch_size == 0 and args.img_size[2] % args.patch_size == 0, "img_size dimensions must be divisible by patch_size dimensions"
-        assert args.d_hidden % args.num_heads == 0, "d_hidden must be divisible by n_heads"
+        assert img_size[1] % patch_size == 0 and img_size[2] % patch_size == 0, "img_size dimensions must be divisible by patch_size dimensions"
+        assert d_hidden % num_heads == 0, "d_hidden must be divisible by n_heads"
+
+        self.args = args 
         
-        self.args = args
-        self.args.model = "VIT"
-        self.model = "VIT"
+        self.d_hidden = d_hidden
+        self.d_mlp = d_mlp
+        self.num_heads = num_heads
+        self.n_layers = n_layers
+        self.dropout = dropout
+        self.attention_dropout = attention_dropout
+        self.img_size = img_size
+        self.patch_size = patch_size
+        self.n_classes = n_classes
+
         
-        self.d_hidden = self.args.d_hidden 
-        self.d_mlp = self.args.d_mlp
+        self.d_hidden = d_hidden 
+        self.d_mlp = d_mlp
         
-        self.img_size = self.args.img_size[1:]
-        self.n_classes = self.args.num_classes # Number of Classes
-        self.n_heads = self.args.num_heads
-        self.patch_size = (self.args.patch_size, self.args.patch_size) # Patch Size
-        self.n_channels = self.args.img_size[0]
-        self.n_layers = self.args.num_layers # Number of Layers
+        self.img_size = img_size[1:]
+        self.n_classes = n_classes # Number of Classes
+        self.n_heads = num_heads
+        self.patch_size = (patch_size, patch_size) # Patch Size
+        self.n_channels = img_size[0]
+        self.n_layers = n_layers # Number of Layers
         
         self.n_patches = (self.img_size[0] * self.img_size[1]) // (self.patch_size[0] * self.patch_size[1])
         
-        self.dropout = self.args.dropout # Dropout Rate
-        self.attention_dropout = self.args.attention_dropout # Attention Dropout Rate   
+        self.dropout = dropout # Dropout Rate
+        self.attention_dropout = attention_dropout # Attention Dropout Rate   
         self.max_seq_length = self.n_patches + 1 # +1 for class token
         
         self.patch_embedding = PatchEmbedding(self.d_hidden, self.img_size, self.patch_size, self.n_channels) # Patch Embedding Layer
@@ -49,7 +59,6 @@ class ViT(nn.Module):
             ) for _ in range(self.n_layers)])
         
         self.classifier = nn.Linear(self.d_hidden, self.n_classes)
-        
         self.device = args.device
         
         self.to(self.device)
@@ -187,19 +196,32 @@ class TransformerEncoder(nn.Module):
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
 
+        # Activation Selection
         self.activation = args.activation
-        if self.activation == "zilu": 
-            self.activation_function = ZiLU(s=args.s, inplace=args.inplace)
-        if self.activation == "silu_a": 
-            self.activation_function = SiLU_a(a=args.a, inplace=args.inplace)
-        if self.activation == "gelu_a": 
-            self.activation_function = GELU_a(a=args.a, inplace=args.inplace)
-        if self.activation == "relu": 
-            self.activation_function = nn.ReLU(inplace=args.inplace)
-        if self.activation == "silu": 
-            self.activation_function = nn.SiLU(inplace=args.inplace)
-        if self.activation == "gelu": 
-            self.activation_function = nn.GELU()
+
+        # Activation function mapping
+        self.activation_map = {
+            "relu": lambda: nn.ReLU(inplace=args.inplace), 
+            "silu": lambda: nn.SiLU(inplace=args.inplace), 
+            "gelu": lambda: nn.GELU(), 
+            "sigmoid": lambda: nn.Sigmoid(), 
+
+            # Previous Activation Generation
+            "gelu_s": lambda: GELU_s(sigma=args.sigma, inplace=args.inplace), 
+            "silu_s": lambda: SiLU_s(sigma=args.sigma, inplace=args.inplace), 
+            "zilu_old": lambda: ZiLU_Old(sigma=args.sigma, inplace=args.inplace), 
+
+            # Current Activation Generation 
+            "arctan": lambda: ArcTan(sigma=args.sigma), 
+            "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
+            "zilu": lambda: ZiLU(sigma=args.sigma), 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma) 
+        }
+
+        if self.activation not in self.activation_map:
+            raise ValueError(f"Unsupported activation function: {self.activation}")
+            
+        self.activation_function = self.activation_map[self.activation]()
 
         # Multilayer Perceptron 
         self.mlp = nn.Sequential(

@@ -29,14 +29,13 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir = "./Output/VIT-Tiny/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/VIT-Tiny/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
         python main.py \
             --activation $act \
-            --sigma None \
-            --inplace True \
+            --inplace \
             --model vit-tiny \
             --dataset $ds \
             --resize 224 \
@@ -81,14 +80,14 @@ for ds in "${DATASETS[@]}"; do
 
             COUNT=$((COUNT + 1)) 
 
-            output_dir = "./Output/VIT-Tiny/$(echo $dataset | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
+            output_dir="./Output/VIT-Tiny/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
             python main.py \
                 --activation $act \
                 --sigma $sigma \
-                --inplace True \
+                --inplace \
                 --model vit-tiny \
                 --dataset $ds \
                 --resize 224 \

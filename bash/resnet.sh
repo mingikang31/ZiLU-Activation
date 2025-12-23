@@ -29,17 +29,15 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir = "./Output/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
         python main.py \
             --activation $act \
-            --sigma None \
-            --inplace True \
+            --inplace \
             --model resnet34 \
             --dataset $ds \
-            --resize None \
             --augment \
             --data_path ./Data \
             --batch_size 128 \
@@ -81,17 +79,16 @@ for ds in "${DATASETS[@]}"; do
 
             COUNT=$((COUNT + 1)) 
 
-            output_dir = "./Output/ResNet34/$(echo $dataset | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
+            output_dir="./Output/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
             python main.py \
                 --activation $act \
                 --sigma $sigma \
-                --inplace True \
+                --inplace \
                 --model resnet34 \
                 --dataset $ds \
-                --resize None \
                 --augment \
                 --data_path ./Data \
                 --batch_size 128 \

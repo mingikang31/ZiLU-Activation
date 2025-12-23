@@ -25,7 +25,7 @@ def args_parser():
     parser.add_argument('--inplace', action='store_true', help='Use inplace activation functions')
     parser.set_defaults(inplace=False)
 
-    parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-large'], help='Model architecture')
+    parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'resnet50', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-large'], help='Model architecture')
 
     # Arguments for Data 
     parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100"], help="Dataset to use for training and evaluation")
@@ -91,20 +91,16 @@ def main(args):
 
     # VGG Models 
     if args.model == "vgg11":
-        features_config = "A"
-        model = VGG(args, features_config=features_config, dropout=0.5)
+        model = VGG(args, features_config="A", dropout=0.5)
     elif args.model == "vgg13":
-        features_config = "B"
-        model = VGG(args, features_config=features_config, dropout=0.5)
+        model = VGG(args, features_config="B", dropout=0.5)
     elif args.model == "vgg16":
-        features_config = "D"
-        model = VGG(args, features_config=features_config, dropout=0.5)
+        model = VGG(args, features_config="D", dropout=0.5)
     elif args.model == "vgg19":
-        features_config = "E"
-        model = VGG(args, features_config=features_config, dropout=0.5)
+        model = VGG(args, features_config="E", dropout=0.5)
 
     # ResNet
-    if args.model == "resnet18" or args.model == "resnet50":
+    if args.model in ["resnet18", "resnet34", "resnet50"]:
         model = ResNet(args)        
 
     # ViT 
@@ -117,13 +113,36 @@ def main(args):
         args.dropout = 0.1
         args.attention_dropout = 0.1
         model = ViT(args)
+        
     elif args.model == "vit-small":
-        pass 
+        args.patch_size = 16 
+        args.d_hidden = 384
+        args.d_mlp = 1536
+        args.num_heads = 6 
+        args.num_layers = 12 
+        args.dropout = 0.1
+        args.attention_dropout = 0.1
+        model = ViT(args)
+
     elif args.model == "vit-medium": 
-        pass 
+        args.patch_size = 16 
+        args.d_hidden = 512 
+        args.d_mlp = 2048 
+        args.num_heads = 8
+        args.num_layers = 12
+        args.dropout = 0.1 
+        args.attention_dropout = 0.1
+        model = ViT(args) 
+
     elif args.model == "vit-large": 
-        pass 
-    
+        args.patch_size = 16 
+        args.d_hidden = 768
+        args.d_mlp = 3072 
+        args.num_heads = 12 
+        args.num_layers = 12 
+        args.dropout = 0.1 
+        args.attention_dropout = 0.1
+        model = ViT(args)
 
     model.to(args.device)
     print(f"Model: {model.name}")

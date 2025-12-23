@@ -12,38 +12,28 @@ from Models.activation import (GELU_s, SiLU_s, ZiLU_Old, ArcTan,
 
 '''VGG Model Class'''
 class ViT(nn.Module): 
-    def __init__(self, args, d_hidden, d_mlp, num_heads, n_layers, dropout, attention_dropout, img_size, patch_size, n_classes): 
+    def __init__(self, args): 
         super(ViT, self).__init__()
-        assert img_size[1] % patch_size == 0 and img_size[2] % patch_size == 0, "img_size dimensions must be divisible by patch_size dimensions"
-        assert d_hidden % num_heads == 0, "d_hidden must be divisible by n_heads"
-
-        self.args = args 
+        assert args.img_size[1] % args.patch_size == 0 and args.img_size[2] % args.patch_size == 0, "img_size dimensions must be divisible by patch_size dimensions"
+        assert args.d_hidden % args.num_heads == 0, "d_hidden must be divisible by n_heads"
         
-        self.d_hidden = d_hidden
-        self.d_mlp = d_mlp
-        self.num_heads = num_heads
-        self.n_layers = n_layers
-        self.dropout = dropout
-        self.attention_dropout = attention_dropout
-        self.img_size = img_size
-        self.patch_size = patch_size
-        self.n_classes = n_classes
-
+        self.args = args
+        self.model = "VIT"
         
-        self.d_hidden = d_hidden 
-        self.d_mlp = d_mlp
+        self.d_hidden = self.args.d_hidden 
+        self.d_mlp = self.args.d_mlp
         
-        self.img_size = img_size[1:]
-        self.n_classes = n_classes # Number of Classes
-        self.n_heads = num_heads
-        self.patch_size = (patch_size, patch_size) # Patch Size
-        self.n_channels = img_size[0]
-        self.n_layers = n_layers # Number of Layers
+        self.img_size = self.args.img_size[1:]
+        self.n_classes = self.args.num_classes # Number of Classes
+        self.n_heads = self.args.num_heads
+        self.patch_size = (self.args.patch_size, self.args.patch_size) # Patch Size
+        self.n_channels = self.args.img_size[0]
+        self.n_layers = self.args.num_layers # Number of Layers
         
         self.n_patches = (self.img_size[0] * self.img_size[1]) // (self.patch_size[0] * self.patch_size[1])
         
-        self.dropout = dropout # Dropout Rate
-        self.attention_dropout = attention_dropout # Attention Dropout Rate   
+        self.dropout = self.args.dropout # Dropout Rate
+        self.attention_dropout = self.args.attention_dropout # Attention Dropout Rate   
         self.max_seq_length = self.n_patches + 1 # +1 for class token
         
         self.patch_embedding = PatchEmbedding(self.d_hidden, self.img_size, self.patch_size, self.n_channels) # Patch Embedding Layer

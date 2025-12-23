@@ -19,8 +19,8 @@ from utils import write_to_file, set_seed
 def args_parser():
     parser = argparse.ArgumentParser(description="Activation Function Experiments")
 
-    # Model Args 
-    parser.add_argument('--activation', type=str, default='zilu', choices=['relu', 'gelu', 'silu', 'sigmoid', 'gelu_s', 'silu_s', 'zilu_old', 'arctan', 'arctan_approx', 'zilu', 'zilu_approx'], help='Activation function to use')
+    # Model Args
+    parser.add_argument('--activation', type=str, default='relu', choices=['relu', 'gelu', 'silu', 'sigmoid', 'gelu_s', 'silu_s', 'zilu_old', 'arctan', 'arctan_approx', 'zilu', 'zilu_approx'], help='Activation function to use')
     parser.add_argument('--sigma', type=float, default=None, help='Sigma parameter for ZiLU activation function')
     parser.add_argument('--inplace', action='store_true', help='Use inplace activation functions')
     parser.set_defaults(inplace=False)
@@ -37,12 +37,11 @@ def args_parser():
 
         
     # Training Arguments
-    parser.add_argument("--batch_size", type=int, default=128, help="Batch size for training and evaluation")
-    parser.add_argument("--num_epochs", type=int, default=100, help="Number of epochs for training")
+    parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training and evaluation")
+    parser.add_argument("--num_epochs", type=int, default=150, help="Number of epochs for training")
     parser.add_argument("--use_amp", action="store_true", help="Use mixed precision training")
     parser.set_defaults(use_amp=False)
     parser.add_argument("--clip_grad_norm", type=float, default=1.0, help="Gradient clipping value")
-    
     
     # Loss Function Arguments
     parser.add_argument("--criterion", type=str, default="CrossEntropy", choices=["CrossEntropy", "MSE"], help="Loss function to use for training")
@@ -50,10 +49,10 @@ def args_parser():
     # Optimizer Arguments 
     parser.add_argument('--optimizer', type=str, default='adamw', choices=['adam', 'sgd', 'adamw'], help='Default Optimizer: adamw')
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum for SGD optimizer') # Only for SGD
-    parser.add_argument('--weight_decay', type=float, default=5e-2, help='Weight decay for optimizer') # For Adam & Adamw
+    parser.add_argument('--weight_decay', type=float, default=1e-2, help='Weight decay for optimizer') # For Adam & Adamw
     
     # Learning Rate Arguments
-    parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate for the optimizer")
+    parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate for the optimizer")
     parser.add_argument('--lr_step', type=int, default=20, help='Step size for learning rate scheduler') # Only for StepLR
     parser.add_argument('--lr_gamma', type=float, default=0.1, help='Gamma for learning rate scheduler') # Only for StepLR
     parser.add_argument('--scheduler', type=str, default='cosine', choices=['step', 'cosine', 'plateau'], help='Learning rate scheduler')

@@ -221,12 +221,11 @@ class TransformerEncoder(nn.Module):
         if self.activation not in self.activation_map:
             raise ValueError(f"Unsupported activation function: {self.activation}")
             
-        self.activation_function = self.activation_map[self.activation]()
 
         # Multilayer Perceptron 
         self.mlp = nn.Sequential(
             nn.Linear(d_hidden, d_mlp),
-            self.activation_function, 
+            self.activation_map[self.activation](), 
             nn.Dropout(dropout),
             nn.Linear(d_mlp, d_hidden)
         )

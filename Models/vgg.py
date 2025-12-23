@@ -41,8 +41,8 @@ class VGG(nn.Module):
 
         self.name = f"VGG {features_config} {args.activation}"
 
-        self.activation = args.activation 
-        
+        # Activation Selection
+        self.activation = args.activation        
 
         cfg = {
             "A": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
@@ -52,9 +52,6 @@ class VGG(nn.Module):
         }
 
         layers = [] 
-
-        # Activation Selection
-        self.activation = args.activation
 
         # Activation function mapping
         activation_map = {
@@ -78,16 +75,14 @@ class VGG(nn.Module):
         if self.activation not in activation_map:
             raise ValueError(f"Unsupported activation function: {self.activation}")
             
-        self.activation_function = activation_map[self.activation]()
-
         for v in cfg[features_config]:
             if v == "M":
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
             else:
                 layers += [nn.Conv2d(in_channels, v, kernel_size=3, stride=1, padding=1), 
-                         nn.BatchNorm2d(v)]
-
-                layers += [activation_map[self.activation]()]
+                         nn.BatchNorm2d(v), 
+                         activation_map[self.activation]()
+                         ]
                         
                 in_channels = v
 
@@ -96,10 +91,10 @@ class VGG(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         self.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 4096),
-            nn.ReLU(True),
+            activation_map[self.activation](), 
             nn.Dropout(dropout),
             nn.Linear(4096, 4096),
-            nn.ReLU(True),
+            activation_map[self.activation](),
             nn.Dropout(dropout),
             nn.Linear(4096, num_classes)
         )
@@ -117,8 +112,3 @@ class VGG(nn.Module):
         total_params = sum(p.numel() for p in self.parameters())
         trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         return total_params, trainable_params
-
-
-
-
-    

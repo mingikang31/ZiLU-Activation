@@ -29,7 +29,7 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir="./Output/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/No-AUG/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
@@ -38,7 +38,6 @@ for ds in "${DATASETS[@]}"; do
             --inplace \
             --model vgg19 \
             --dataset $ds \
-            --augment \
             --data_path ./Data \
             --batch_size 128 \
             --num_epochs 200 \
@@ -79,7 +78,7 @@ for ds in "${DATASETS[@]}"; do
 
             COUNT=$((COUNT + 1)) 
 
-            output_dir="./Output/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
+            output_dir="./Output/No-AUG/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
@@ -89,7 +88,6 @@ for ds in "${DATASETS[@]}"; do
                 --inplace \
                 --model vgg19 \
                 --dataset $ds \
-                --augment \
                 --data_path ./Data \
                 --batch_size 128 \
                 --num_epochs 200 \

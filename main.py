@@ -84,8 +84,6 @@ def main(args):
     else:
         raise ValueError("Dataset not supported")
 
-    print(args.img_size)
-
     # VGG Models 
     if args.model == "vgg11":
         model = VGG(args, features_config="A", dropout=0.5)
@@ -154,7 +152,6 @@ def main(args):
     
     if args.test_only:
         ex = torch.Tensor(3, args.img_size[0], args.img_size[1], args.img_size[2]).to(args.device)
-        print(ex.shape)
         out = model(ex)
         print(f"Output shape: {out.shape}")
         print("Testing Complete")

@@ -70,12 +70,7 @@ def args_parser():
     
     return parser
 
-
-
 def main(args):
-
-    # Resize False 
-    args.resize = False
     
     # Dataset 
     if args.dataset == "cifar10":
@@ -88,6 +83,8 @@ def main(args):
         args.img_size = dataset.img_size 
     else:
         raise ValueError("Dataset not supported")
+
+    print(args.img_size)
 
     # VGG Models 
     if args.model == "vgg11":
@@ -156,7 +153,8 @@ def main(args):
 
     
     if args.test_only:
-        ex = torch.Tensor(3, 3, 32, 32).to(args.device)
+        ex = torch.Tensor(3, args.img_size[0], args.img_size[1], args.img_size[2]).to(args.device)
+        print(ex.shape)
         out = model(ex)
         print(f"Output shape: {out.shape}")
         print("Testing Complete")

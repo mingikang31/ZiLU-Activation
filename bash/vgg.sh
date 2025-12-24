@@ -17,7 +17,8 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 
 DATASETS=("cifar10" "cifar100")
 # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu_old' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
+# ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
+ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'zilu' 'zilu_approx')
 LR="1e-3"
 
 COUNT=0
@@ -29,7 +30,7 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir="./Output/No-AUG/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/AUG/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
@@ -38,6 +39,7 @@ for ds in "${DATASETS[@]}"; do
             --inplace \
             --model vgg19 \
             --dataset $ds \
+            --augment \
             --data_path ./Data \
             --batch_size 128 \
             --num_epochs 200 \
@@ -67,7 +69,8 @@ done
 # Vary Sigmas 
 DATASETS=("cifar10" "cifar100")
 # ACTIVATIONS=('gelu_s' 'silu_s' 'zilu_old' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-ACTIVATIONS=('arctan' 'arctan_approx' 'zilu' 'zilu_approx')
+# ACTIVATIONS=('arctan' 'arctan_approx' 'zilu' 'zilu_approx')
+ACTIVATIONS=('zilu' 'zilu_approx')
 LR="1e-3"
 SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
 
@@ -78,7 +81,7 @@ for ds in "${DATASETS[@]}"; do
 
             COUNT=$((COUNT + 1)) 
 
-            output_dir="./Output/No-AUG/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
+            output_dir="./Output/AUG/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
@@ -88,6 +91,7 @@ for ds in "${DATASETS[@]}"; do
                 --inplace \
                 --model vgg19 \
                 --dataset $ds \
+                --augment \
                 --data_path ./Data \
                 --batch_size 128 \
                 --num_epochs 200 \

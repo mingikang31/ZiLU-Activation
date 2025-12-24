@@ -142,12 +142,16 @@ class CIFAR100(datasets.CIFAR100):
         # Train Transformations
         self.train_transform_list = []
         if args.resize: 
-            self.train_transform_list += [transforms.Resize((args.resize, args.resize))]
+            self.train_transform_list += [
+                transforms.Resize((args.resize, args.resize))
+                ]
         if args.augment:
             self.train_transform_list += [
                 transforms.RandomCrop(args.resize if args.resize else 32, padding=4),
                 transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
             ]
+            
         self.train_transform_list += [
             transforms.ToTensor(),
             transforms.Normalize(mean=self.CIFAR100_MEAN, std=self.CIFAR100_STD),
@@ -198,6 +202,7 @@ class CIFAR10(datasets.CIFAR10):
             self.train_transform_list += [
                 transforms.RandomCrop(args.resize if args.resize else 32, padding=4),
                 transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
             ]
         self.train_transform_list += [
             transforms.ToTensor(),

@@ -156,21 +156,22 @@ def main(args):
         print(f"Output shape: {out.shape}")
         print("Testing Complete")
     else:
-        # Check if the output directory exists, if not create it
+        # Output directory existence check
         if args.output_dir:
             Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
         # Set the seed for reproducibility
-        set_seed(args.seed)
+        if args.seed != 0:
+            set_seed(args.seed)
         
-        # Training Modules 
+        # Training Module
         train_eval_results = Train_Eval(args, 
                                     model, 
                                     dataset.train_loader, 
                                     dataset.test_loader
                                     )
         
-        # Storing Results in output directory 
+        # Store Results
         write_to_file(os.path.join(args.output_dir, "args.txt"), args)
         write_to_file(os.path.join(args.output_dir, "model.txt"), model)
         write_to_file(os.path.join(args.output_dir, "train_eval_results.txt"), train_eval_results)
@@ -178,5 +179,4 @@ def main(args):
 if __name__ == '__main__': 
     parser = argparse.ArgumentParser(description="Activation Functions", parents=[args_parser()], add_help=False)
     args = parser.parse_args()
-
     main(args)

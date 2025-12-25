@@ -6,123 +6,42 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np 
 
-
-
-
-# ### WIKI Text 103 
-# train_path = ('./Data/train.bin')
-# train_data = np.memmap(train_path, dtype='uint16', mode='r')
-
-# batch_size = 12 
-# block_size = 1028 
-# bias = False 
-# real_data = True
-
-# compile = True 
-
-# def get_batch(split):
-#     data = train_data 
-#     ix = torch.randint(len(data) - block_size, (batch_size,))
-#     x = torch.stack([torch.from_numpy((data[i: i + block_size]).astype(np.int64)) for i in ix])
-#     y = torch.stack([torch.from_numpy((data[i + 1: i + 1 + block_size]).astype(np.int64)) for i in ix])
-
-#     x, y = x.to('cuda'), y.to('cuda')
-#     return x, y
-
-
-# # Training script: 
-    
-    
-# // ...existing code...
-# from torch.utils.data import Dataset, DataLoader
-
-# class WikiText103Dataset(Dataset):
-#     def __init__(self, data_path, block_size):
-#         self.data = np.memmap(data_path, dtype='uint16', mode='r')
-#         self.block_size = block_size
-        
-#     def __len__(self):
-#         return len(self.data) - self.block_size
-    
-#     def __getitem__(self, idx):
-#         x = torch.from_numpy(self.data[idx:idx + self.block_size].astype(np.int64))
-#         y = torch.from_numpy(self.data[idx + 1:idx + 1 + self.block_size].astype(np.int64))
-#         return x, y
-
-# class WikiText103:
-#     def __init__(self, args=None, batch_size=12, block_size=1024, data_dir='./Data'):
-#         """
-#         Simple WikiText-103 dataset wrapper
-        
-#         Args:
-#             args: Optional args object (for compatibility with CIFAR classes)
-#             batch_size: Batch size for data loaders
-#             block_size: Sequence length
-#             data_dir: Directory containing train.bin and val.bin
-#         """
-#         # Handle args if provided (for consistency with CIFAR classes)
-#         if args is not None:
-#             batch_size = getattr(args, 'batch_size', batch_size)
-#             block_size = getattr(args, 'block_size', block_size)
-#             data_dir = getattr(args, 'data_path', data_dir)
-        
-#         self.batch_size = batch_size
-#         self.block_size = block_size
-#         self.vocab_size = 50257  # GPT-2 vocab size
-        
-#         # Create datasets
-#         train_path = f'{data_dir}/train.bin'
-#         val_path = f'{data_dir}/val.bin'
-        
-#         self.train_data = WikiText103Dataset(train_path, block_size)
-#         self.test_data = WikiText103Dataset(val_path, block_size)  # Using val as test for consistency
-        
-#         # Create data loaders
-#         self.train_loader = DataLoader(
-#             self.train_data, 
-#             batch_size=batch_size, 
-#             shuffle=True, 
-#             num_workers=4,
-#             pin_memory=True
-#         )
-        
-#         self.test_loader = DataLoader(
-#             self.test_data, 
-#             batch_size=batch_size, 
-#             shuffle=False, 
-#             num_workers=4,
-#             pin_memory=True
-#         )
-        
-#         # For compatibility
-#         self.num_classes = self.vocab_size
-    
-#     def shape(self):
-#         """Return input shape for compatibility"""
-#         return (self.block_size,)  # Sequence length
-    
-#     def get_batch(self, split='train'):
-#         """Get a single batch - alternative to using DataLoader"""
-#         if split == 'train':
-#             data = self.train_data.data
-#         else:
-#             data = self.test_data.data
-            
-#         ix = torch.randint(len(data) - self.block_size, (self.batch_size,))
-#         x = torch.stack([torch.from_numpy((data[i: i + self.block_size]).astype(np.int64)) for i in ix])
-#         y = torch.stack([torch.from_numpy((data[i + 1: i + 1 + self.block_size]).astype(np.int64)) for i in ix])
-#         return x, y
-
-# // ...existing code...
+# Huggingface Datasets + GPT Tokenizer
+from datasets import load_dataset
+from transformers import GPT2Tokenizer 
 
 
 '''Wikitext-103 Dataset Class'''
 class WikiText103:
     def __init__(self, args):
-        pass 
+        self.max_seq_length = args.max_seq_length
+        self.block_size = self.max_seq_length
 
-    
-    
+
+        # Dataset
+        self.original_dataset = load_dataset("wikitext", "wikitext-103-v1")
+        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        self.tokenizer.pad_token = self.tokenizer.eos_token
+        self.tokenized_dataset = self.original_dataset.map(self.tokenize_function, batched=True, remove_columns=["text"])
+        self.lm_dataset = self.tokenized_dataset.map(self.group_texts, batched=True)
+
+        # Data Loaders 
+        self.train_loader = DataLoader(dataset=self.lm_dataset["train"], batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True)
+        self.test_loader = DataLoader(dataset=self.lm_dataset["test"], batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
+
+    def group_texts(self, examples): 
+        concatenated = {k: sum(examples[k], []) for k in examples.keys()}
+        total_length = len(concatenated[list(examples.keys())[0]])
+        total_length = (total_length // self.block_size) * self.block_size
+        result = {
+            k: [t[i : i + self.block_size] for i in range(0, total_length, self.block_size)]
+            for k, t in concatenated.items()
+        }
+        result["labels"] = result["input_ids"].copy()
+        return result
+
+    def tokenize_function(self, examples):
+        return self.tokenizer(examples["text"])
 
 '''CIFAR-10 and CIFAR-100 Dataset Classes'''
 class AddGaussianNoise(object):

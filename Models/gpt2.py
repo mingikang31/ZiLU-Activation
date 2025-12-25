@@ -55,6 +55,7 @@ class GPT2(nn.Module):
         # Initialize Weights 
         self.apply(self._init_weights)
 
+        self.name = f"GPT2_{num_layers}L_{num_attention_heads}H_{embedding_dim}D_{args.activation}"
         self.to(device)
 
     def _init_weights(self, module):
@@ -97,10 +98,13 @@ class GPT2(nn.Module):
     
     def parameter_count(self, non_embeddings=True): 
         total_params = sum(p.numel() for p in self.parameters())
+        trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         if non_embeddings:
             total_params -= self.token_embeddings.weight.numel() + self.position_embeddings.weight.numel()
-        return total_params
+            trainable_params -= self.token_embeddings.weight.numel() + self.position_embeddings.weight.numel()
         
+        return total_params, trainable_params
+    
 class CausalMultiHeadAttention(nn.Module):
     def __init__(self, d_embeddings, num_heads, max_seq_length):
         super(CausalMultiHeadAttention, self).__init__()
@@ -184,7 +188,7 @@ class MLP(nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        x = self.activation(x)
+        x = self.activation_function(x)
         x = self.fc2(x)
         return x
 
@@ -209,11 +213,11 @@ class TransformerBlock(nn.Module):
         return x
 
 
-if __name__ == "__main__":
-    model = GPT2(device='cpu')
-    total_params = model.parameter_count()
-    print(f"Total Parameters: {total_params}")
+# if __name__ == "__main__":
+#     model = GPT2(device='cpu')
+#     total_params = model.parameter_count()
+#     print(f"Total Parameters: {total_params}")
 
-    ex = torch.randint(0, 50257, (2, 10)).long()
-    logits, loss = model(ex)
-    print("Logits shape:", logits.shape)
+#     ex = torch.randint(0, 50257, (2, 10)).long()
+#     logits, loss = model(ex)
+#     print("Logits shape:", logits.shape)

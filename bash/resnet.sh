@@ -43,6 +43,7 @@ for ds in "${DATASETS[@]}"; do
             --data_path ./Data \
             --batch_size 128 \
             --num_epochs 200 \
+            --use_amp \
             --clip_grad_norm 1.0 \
             --criterion CrossEntropy \
             --optimizer adamw \
@@ -95,6 +96,7 @@ for ds in "${DATASETS[@]}"; do
                 --data_path ./Data \
                 --batch_size 128 \
                 --num_epochs 200 \
+                --use_amp \
                 --clip_grad_norm 1.0 \
                 --criterion CrossEntropy \
                 --optimizer adamw \

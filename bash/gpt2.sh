@@ -1,24 +1,25 @@
-#!/bin/bash 
+#! /bin/bash 
 #SBATCH --nodes=1 
 #SBATCH --mem=64G
-#SBATCH -p arm --gres=shard:4
-#SBATCH --cpus-per-task=32
-#SBATCH --job-name=ViT_Exp
-#SBATCH --time=72:00:00
+#SBATCH -p gpu --gres=gpu:a100:1
+#SBATCH --cpus-per-task=4
+#SBATCH --job-name=gpt2_exp
+#SBATCH --time=500:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
-source ~/.bashrc
-conda activate mingi-arm
+source ~/.bashrc 
+conda activate mingi 
 
-cd /mnt/research/j.farias/mkang2/ZiLU-Activation
+cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
-DATASETS=("cifar10" "cifar100")
+DATASETS=("wikitext103")
 # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu_old' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-LR="1e-3"
+# ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
+ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'zilu' 'zilu_approx')
+LR="6e-4"
 
 COUNT=0
 FAILED=0
@@ -29,25 +30,26 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir="./Output/AUG/VIT-Tiny/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/GPT2/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
-        python main.py \
+        python main_gpt.py \
+            --vocab_size 50257 \
+            --max_seq_length 1024 \
+            --embedding_dim 768 \
+            --num_attention_heads 12 \
+            --num_layers 12 \
             --activation $act \
             --inplace \
-            --model vit-tiny \
             --dataset $ds \
-            --augment \
-            --resize 224 \
             --data_path ./Data \
-            --batch_size 128 \
-            --num_epochs 200 \
+            --batch_size 64 \
+            --num_epochs 10 \
             --use_amp \
             --clip_grad_norm 1.0 \
-            --criterion CrossEntropy \
             --optimizer adamw \
-            --weight_decay 1e-2 \
+            --weight_decay 0.1 \
             --lr $LR \
             --scheduler cosine \
             --device cuda \
@@ -68,10 +70,11 @@ done
 
 
 # Vary Sigmas 
-DATASETS=("cifar10" "cifar100")
+DATASETS=("wikitext103")
 # ACTIVATIONS=('gelu_s' 'silu_s' 'zilu_old' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
+# ACTIVATIONS=('arctan' 'arctan_approx' 'zilu' 'zilu_approx')
 ACTIVATIONS=('zilu' 'zilu_approx')
-LR="1e-3"
+LR="6e-4"
 SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
 
 # Vary sigmas
@@ -81,26 +84,27 @@ for ds in "${DATASETS[@]}"; do
 
             COUNT=$((COUNT + 1)) 
 
-            output_dir="./Output/AUG/VIT-Tiny/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
+            output_dir="./Output/GPT2/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
-            python main.py \
+            python main_gpt.py \
+                --vocab_size 50257 \
+                --max_seq_length 1024 \
+                --embedding_dim 768 \
+                --num_attention_heads 12 \
+                --num_layers 12 \
                 --activation $act \
                 --sigma $sigma \
                 --inplace \
-                --model vit-tiny \
                 --dataset $ds \
-                --augment \
-                --resize 224 \
                 --data_path ./Data \
-                --batch_size 128 \
-                --num_epochs 200 \
+                --batch_size 64 \
+                --num_epochs 10 \
                 --use_amp \
                 --clip_grad_norm 1.0 \
-                --criterion CrossEntropy \
                 --optimizer adamw \
-                --weight_decay 1e-2 \
+                --weight_decay 0.1 \
                 --lr $LR \
                 --scheduler cosine \
                 --device cuda \
@@ -120,9 +124,8 @@ for ds in "${DATASETS[@]}"; do
     done 
 done 
 
-
 echo "=========================================="
-echo "Completed VIT-Tiny Experiments"
+echo "Completed GPT2 Experiments"
 echo "------------------------------------------"
 echo "Total experiments: $COUNT"
 echo "Successful: $((COUNT - FAILED))"

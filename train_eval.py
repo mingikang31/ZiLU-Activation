@@ -205,8 +205,12 @@ def Train_Eval_GPT(args,
     
     ## [GFLOPS] Computation using PyTorch Profiler ##
     try:
-        input_tensor, _ = next(iter(train_loader))
-        input_ids = torch.stack(input_tensor["input_ids"]).to(device)
+        batch = next(iter(train_loader))
+
+        tokens = torch.stack(batch["input_ids"]).to(device) 
+        
+        inputs = tokens[:, :-1].contiguous()
+        targets = tokens[:, 1:].contiguous()
 
         # Profile a single forward pass
         with torch.profiler.profile(
@@ -214,7 +218,7 @@ def Train_Eval_GPT(args,
             with_flops=True
         ) as prof:
             with torch.no_grad():
-                model(input_ids[0:1])
+                logits, loss = model(inputs, target=targets)
 
         # A more robust way to get total FLOPs: sum them up from all events
         total_flops = sum(event.flops for event in prof.key_averages())

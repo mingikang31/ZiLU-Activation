@@ -38,7 +38,7 @@ def args_parser():
     parser.set_defaults(compile=False)
     parser.add_argument("--compile_mode", type=str, default="default", choices=["default", "reduce-overhead", "reduce-memory", "reduce-overhead", "max-autotune"], help="Compilation mode for torch.compile")
     
-    parser.add_argument("--batch_size", type=int, default=16, help="Batch size for training and evaluation")
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training and evaluation")
     parser.add_argument("--num_epochs", type=int, default=10, help="Number of epochs for training")
     parser.add_argument("--use_amp", action="store_true", help="Use mixed precision training")
     parser.set_defaults(use_amp=False)

@@ -1,2 +1,5 @@
 ## Notes
 - ArcTan and ArcTan Approx learns surprisingly well with very low learning rates. Last 50 epochs of 200 epochs with lr=1e-3 with cosine scheduler, it achieves ~60% accuracy on CIFAR-10 with ResNet34. 
+
+## GPT2 WikiText103 Notes
+- 32 batch size takes 50,566M or 50.6 GB of memory. 

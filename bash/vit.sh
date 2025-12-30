@@ -1,9 +1,9 @@
 #!/bin/bash 
 #SBATCH --nodes=1 
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH -p arm --gres=shard:4
-#SBATCH --cpus-per-task=32
-#SBATCH --job-name=ViT_Exp
+#SBATCH --cpus-per-task=74
+#SBATCH --job-name=vit_exp
 #SBATCH --time=96:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
@@ -33,7 +33,7 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 
 #         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
-#         python main.py \
+#         python vision_main.py \
 #             --activation $act \
 #             --inplace \
 #             --model vit-tiny \
@@ -44,6 +44,7 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 #             --batch_size 128 \
 #             --num_epochs 200 \
 #             --use_amp \
+#             --compile \
 #             --clip_grad_norm 1.0 \
 #             --criterion CrossEntropy \
 #             --optimizer adamw \
@@ -86,7 +87,7 @@ for ds in "${DATASETS[@]}"; do
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
-            python main.py \
+            python vision_main.py \
                 --activation $act \
                 --sigma $sigma \
                 --inplace \
@@ -98,6 +99,7 @@ for ds in "${DATASETS[@]}"; do
                 --batch_size 128 \
                 --num_epochs 200 \
                 --use_amp \
+                --compile \
                 --clip_grad_norm 1.0 \
                 --criterion CrossEntropy \
                 --optimizer adamw \
@@ -142,7 +144,7 @@ for ds in "${DATASETS[@]}"; do
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
-            python main.py \
+            python vision_main.py \
                 --activation $act \
                 --sigma $sigma \
                 --inplace \
@@ -154,6 +156,7 @@ for ds in "${DATASETS[@]}"; do
                 --batch_size 128 \
                 --num_epochs 200 \
                 --use_amp \
+                --compile \
                 --clip_grad_norm 1.0 \
                 --criterion CrossEntropy \
                 --optimizer adamw \

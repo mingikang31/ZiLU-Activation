@@ -5,9 +5,11 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt 
 from PIL import Image
 import numpy as np 
+import os 
+from pathlib import Path 
 
 # Huggingface Datasets + GPT Tokenizer
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer 
 
 
@@ -16,14 +18,34 @@ class WikiText103:
     def __init__(self, args):
         self.max_seq_length = args.max_seq_length
         self.block_size = self.max_seq_length
+        self.cache_dir = os.path.join(args.data_path, "wikitext103_cache")
 
-
-        # Dataset
-        self.original_dataset = load_dataset("wikitext", "wikitext-103-v1")
+        # Tokenizer 
         self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
         self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.tokenized_dataset = self.original_dataset.map(self.tokenize_function, batched=True, remove_columns=["text"])
-        self.lm_dataset = self.tokenized_dataset.map(self.group_texts, batched=True)
+
+        if os.path.exists(self.cache_dir):
+            print(f"Loading preprocessed dataset from {self.cache_dir}")
+            self.lm_dataset = load_from_disk(self.cache_dir)
+        else: 
+            os.makedirs(self.cache_dir, exist_ok=True)
+
+            # Dataset
+            self.original_dataset = load_dataset("wikitext", "wikitext-103-v1")
+
+        
+            self.tokenized_dataset = self.original_dataset.map(
+                self.tokenize_function, 
+                batched=True, 
+                remove_columns=["text"]
+            )
+            
+            self.lm_dataset = self.tokenized_dataset.map(
+                self.group_texts, 
+                batched=True
+            )
+            self.lm_dataset.save_to_disk(self.cache_dir)
+            print(f"Preprocessed dataset saved to {self.cache_dir}")
 
         # Data Loaders 
         self.train_loader = DataLoader(dataset=self.lm_dataset["train"], batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True)

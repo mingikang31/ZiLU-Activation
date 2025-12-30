@@ -16,9 +16,7 @@ conda activate mingi
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
 DATASETS=("wikitext103")
-# ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu_old' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-# ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'zilu' 'zilu_approx')
+ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu' 'zilu_approx')
 LR="6e-4"
 
 COUNT=0
@@ -34,7 +32,7 @@ for ds in "${DATASETS[@]}"; do
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
-        python main_gpt.py \
+        python language_main.py \
             --vocab_size 50257 \
             --max_seq_length 1024 \
             --embedding_dim 768 \
@@ -47,6 +45,7 @@ for ds in "${DATASETS[@]}"; do
             --batch_size 64 \
             --num_epochs 10 \
             --use_amp \
+            --compile \
             --clip_grad_norm 1.0 \
             --optimizer adamw \
             --weight_decay 0.1 \
@@ -71,9 +70,7 @@ done
 
 # Vary Sigmas 
 DATASETS=("wikitext103")
-# ACTIVATIONS=('gelu_s' 'silu_s' 'zilu_old' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-# ACTIVATIONS=('arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-ACTIVATIONS=('zilu' 'zilu_approx')
+ACTIVATIONS=('gelu_s' 'silu_s' 'zilu' 'zilu_approx')
 LR="6e-4"
 SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
 
@@ -88,7 +85,7 @@ for ds in "${DATASETS[@]}"; do
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
-            python main_gpt.py \
+            python language_main.py \
                 --vocab_size 50257 \
                 --max_seq_length 1024 \
                 --embedding_dim 768 \
@@ -102,6 +99,7 @@ for ds in "${DATASETS[@]}"; do
                 --batch_size 64 \
                 --num_epochs 10 \
                 --use_amp \
+                --compile \
                 --clip_grad_norm 1.0 \
                 --optimizer adamw \
                 --weight_decay 0.1 \

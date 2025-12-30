@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 """
-GELU with adjustable parameter a
-SiLU with adjustable parameter a
-ZiLU with adjustable parameter s
+[1] GELU with adjustable parameter a
+[2] SiLU with adjustable parameter a
+[3] ZiLU with adjustable parameter s
 """
 class GELU_s(nn.Module):
     def __init__(self, sigma, inplace=False, max_val=1000):
@@ -50,10 +50,10 @@ class ZiLU_Old(nn.Module):
             return x * (2 * (1/4 + 1/(2 * torch.pi) * torch.arctan(self.sigma * x)))
 
 """
-arctan 
-arctan approximation 
-ZiLU
-ZiLU approximation
+[1] ArcTan (Gating Function)
+[2] ArcTan Approximation (Gating Function)
+[3] ZiLU (Activation Function) using ArcTan
+[4] ZiLU Approximation (Activation Function) using ArcTan Approximation
 """
 
 class ArcTan(nn.Module):

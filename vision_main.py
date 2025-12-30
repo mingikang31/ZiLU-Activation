@@ -37,6 +37,10 @@ def args_parser():
 
         
     # Training Arguments
+    parser.add_argument("--compile", action="store_true", help="Use compiled model for training and evaluation")
+    parser.set_defaults(compile=False)
+    parser.add_argument("--compile_mode", type=str, default="default", choices=["default", "reduce-overhead", "reduce-memory", "reduce-overhead", "max-autotune"], help="Compilation mode for torch.compile")
+    
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training and evaluation")
     parser.add_argument("--num_epochs", type=int, default=150, help="Number of epochs for training")
     parser.add_argument("--use_amp", action="store_true", help="Use mixed precision training")
@@ -60,7 +64,7 @@ def args_parser():
     # Device Arguments
     parser.add_argument("--device", type=str, default="cuda", choices=["cpu", "cuda", "mps"], help="Device to use for training and evaluation")
     parser.add_argument('--seed', default=0, type=int)
-    
+
     # Output Arguments 
     parser.add_argument("--output_dir", type=str, default="./Output/ZiLU/vgg11", help="Directory to save the output files")
     
@@ -156,10 +160,18 @@ def main(args):
         print(f"Output shape: {out.shape}")
         print("Testing Complete")
     else:
-        # Output directory existence check
+        # Check if the output directory exists, if not create it
         if args.output_dir:
             Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
+        # Compile Model 
+        if args.compile: 
+            model = torch.compile(
+                model, 
+                mode=args.compile_mode, 
+                fullgraph=False, 
+                dynamic=False) 
+            
         # Set the seed for reproducibility
         if args.seed != 0:
             set_seed(args.seed)

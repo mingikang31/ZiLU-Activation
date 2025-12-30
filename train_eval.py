@@ -7,7 +7,6 @@ import time
 from torch.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
 import torch.profiler
-
 from utils import set_seed
 
 def Train_Eval(args, 
@@ -20,8 +19,11 @@ def Train_Eval(args,
         set_seed(args.seed)
 
     # Loss Criterion
-    criterion = nn.CrossEntropyLoss() if args.criterion == 'CrossEntropy' else nn.MSELoss()
-    
+    if args.criterion == 'CrossEntropy':
+        criterion = nn.CrossEntropyLoss()
+    elif args.criterion == 'MSE':
+        criterion = nn.MSELoss()
+            
     # Optimizer 
     if args.optimizer == 'adam':
         optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -39,7 +41,6 @@ def Train_Eval(args,
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.num_epochs)
     elif args.scheduler == 'plateau':
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=5)
-
         
     # Device
     device = args.device

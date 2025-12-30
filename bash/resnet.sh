@@ -34,15 +34,17 @@ for ds in "${DATASETS[@]}"; do
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
-        python main.py \
+        python vision_main.py \
             --activation $act \
             --inplace \
             --model resnet34 \
             --dataset $ds \
+            --augment \
             --data_path ./Data \
             --batch_size 128 \
             --num_epochs 200 \
             --use_amp \
+            --compile \
             --clip_grad_norm 1.0 \
             --criterion CrossEntropy \
             --optimizer adamw \
@@ -85,16 +87,18 @@ for ds in "${DATASETS[@]}"; do
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
-            python main.py \
+            python vision_main.py \
                 --activation $act \
                 --sigma $sigma \
                 --inplace \
                 --model resnet34 \
                 --dataset $ds \
+                --augment \
                 --data_path ./Data \
                 --batch_size 128 \
                 --num_epochs 200 \
                 --use_amp \
+                --compile \
                 --clip_grad_norm 1.0 \
                 --criterion CrossEntropy \
                 --optimizer adamw \

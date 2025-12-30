@@ -1,6 +1,8 @@
 datasets
 transformers
 tokenizers
+fsspec
+filelock
 tiktoken
 numpy
 matplotlib

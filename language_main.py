@@ -68,7 +68,11 @@ def args_parser():
     return parser 
 
 def main(args):
-
+    try: 
+        torch.set_float32_matmul_precision('high')
+    except:
+        print("Coult not use TensorFloat-32")
+        
     # Dataset
     if args.dataset == "wikitext103":
         dataset = WikiText103(args)
@@ -115,6 +119,7 @@ def main(args):
                 mode=args.compile_mode, 
                 fullgraph=False, 
                 dynamic=False) 
+            print("compiled success!")
             
         # Set the seed for reproducibility
         if args.seed != 0: 

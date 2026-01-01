@@ -8,46 +8,39 @@ import torch.nn.functional as F
 [3] ZiLU with adjustable parameter s
 """
 class GELU_s(nn.Module):
-    def __init__(self, sigma, inplace=False, max_val=1000):
+    def __init__(self, sigma, inplace=False):
         super(GELU_s, self).__init__()
 
-        self.sigma = sigma
-        self.max_val = max_val
+        if sigma: 
+            self.sigma = sigma
+        else: 
+            self.sigma = nn.Parameter(torch.tensor(5.0))
+        
         self.kAlpha = 0.70710678118654752440
-        self.relu = nn.ReLU(inplace=inplace) 
 
     def forward(self, x):
-        if self.sigma >= self.max_val:
-            return self.relu(x) 
-        else: 
-            return x * 0.5 * (1 + torch.erf(self.sigma * x * self.kAlpha))
+        return x * 0.5 * (1 + torch.erf(self.sigma * x * self.kAlpha))
 
 class SiLU_s(nn.Module):
-    def __init__(self, sigma, inplace=False, max_val=1000):
+    def __init__(self, sigma, inplace=False):
         super(SiLU_s, self).__init__()
-        self.sigma = sigma
-        self.max_val = max_val
-        self.relu = nn.ReLU(inplace=inplace)
+        if sigma: 
+            self.sigma = sigma
+        else: 
+            self.sigma = nn.Parameter(torch.tensor(5.0))
         
     def forward(self, x):
-        if self.sigma >= self.max_val:
-            return self.relu(x)
-        else:
-            return x * torch.sigmoid(self.sigma * x)
+        return x * torch.sigmoid(self.sigma * x)
 
 class ZiLU_Old(nn.Module):
-    def __init__(self, sigma, inplace=False, max_val=1000):
+    def __init__(self, sigma, inplace=False):
         super(ZiLU_Old, self).__init__()
 
         self.sigma = sigma
-        self.max_val = max_val
         self.relu = nn.ReLU(inplace=inplace)
 
     def forward(self, x):
-        if self.sigma >= self.max_val:
-            return self.relu(x)
-        else:
-            return x * (2 * (1/4 + 1/(2 * torch.pi) * torch.arctan(self.sigma * x)))
+        return x * (2 * (1/4 + 1/(2 * torch.pi) * torch.arctan(self.sigma * x)))
 
 """
 [1] ArcTan (Gating Function)

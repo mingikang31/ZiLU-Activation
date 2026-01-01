@@ -2,7 +2,7 @@
 #SBATCH --nodes=1 
 #SBATCH --mem=128G
 #SBATCH -p arm --gres=shard:4
-#SBATCH --cpus-per-task=74
+#SBATCH --cpus-per-task=48
 #SBATCH --job-name=vit_exp
 #SBATCH --time=96:00:00
 #SBATCH --output=slurm_out/%j.out

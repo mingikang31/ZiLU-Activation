@@ -3,3 +3,6 @@
 
 ## GPT2 WikiText103 Notes
 - 32 batch size takes 50,566M or 50.6 GB of memory. 
+
+## Conda Environments
+- torch-a100 is able to use amp, compile, and huggingface datasets, tranformers, pytorch, etc. 

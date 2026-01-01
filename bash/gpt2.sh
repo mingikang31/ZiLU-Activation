@@ -1,17 +1,18 @@
-#! /bin/bash 
+#!/bin/bash 
 #SBATCH --nodes=1 
-#SBATCH --mem=64G
-#SBATCH -p gpu --gres=gpu:a100:1
-#SBATCH --cpus-per-task=4
+#SBATCH --mem=128G
+#SBATCH -p arm --gres=shard:4
+#SBATCH --cpus-per-task=48
 #SBATCH --job-name=gpt2_exp
-#SBATCH --time=500:00:00
+#SBATCH --time=96:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
-source ~/.bashrc 
+source ~/.bashrc
 conda activate torch-a100
+
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
@@ -96,7 +97,7 @@ for ds in "${DATASETS[@]}"; do
                 --inplace \
                 --dataset $ds \
                 --data_path ./Data \
-                --batch_size 64 \
+                --batch_size 32 \
                 --num_epochs 10 \
                 --use_amp \
                 --compile \

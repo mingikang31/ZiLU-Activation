@@ -11,7 +11,7 @@
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
 source ~/.bashrc
-conda activate torch-a100
+conda activate mingi-arm
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 

@@ -75,6 +75,7 @@ def args_parser():
     return parser
 
 def main(args):
+    # Using TensorFloat-32 (TF32)
     try: 
         torch.set_float32_matmul_precision('high')
     except:

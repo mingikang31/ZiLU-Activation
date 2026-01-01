@@ -120,9 +120,6 @@ def Train_Eval(args,
 
         train_top1_5[0] /= len(train_loader)
         train_top1_5[1] /= len(train_loader)
-        end_time = time.time()
-        epoch_result += f"[Epoch {epoch+1:03d}] Time: {end_time - start_time:.4f}s | [Train] Loss: {train_running_loss/len(train_loader):.8f} Accuracy: Top1: {train_top1_5[0]:.4f}%, Top5: {train_top1_5[1]:.4f}% | "
-        epoch_times.append(end_time - start_time)
         
         # Model Evaluation 
         model.eval()
@@ -144,9 +141,14 @@ def Train_Eval(args,
         
         test_top1_5[0] /= len(test_loader)
         test_top1_5[1] /= len(test_loader)
-        epoch_result += f"[Test] Loss: {test_running_loss/len(test_loader):.8f} Accuracy: Top1: {test_top1_5[0]:.4f}%, Top5: {test_top1_5[1]:.4f}%"
-        print(epoch_result)
-        epoch_results.append(epoch_result)
+
+        # Single Epoch Duration
+        epoch_time = time.time() - start_time
+        epoch_times.append(epoch_time)
+
+        # Save Epoch Results
+        epoch_results.append(f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {train_running_loss/len(train_loader):.8f} Accuracy: Top1: {train_top1_5[0]:.4f}%, Top5: {train_top1_5[1]:.4f}% | [Test] Loss: {test_running_loss/len(test_loader):.8f} Accuracy: Top1: {test_top1_5[0]:.4f}%, Top5: {test_top1_5[1]:.4f}%")
+        print(epoch_results[-1])
         
         # Max Accuracy Check
         if test_top1_5[0] > max_accuracy:
@@ -239,7 +241,7 @@ def Train_Eval_GPT(args,
     epoch_times = [] # Average Epoch Time
 
     min_perplexity = float('inf')
-    max_epoch = 0
+    min_epoch = 0
 
     for epoch in range(args.num_epochs):
         start_time = time.time() 
@@ -296,7 +298,10 @@ def Train_Eval_GPT(args,
                 
         avg_test_loss = test_running_loss / len(test_loader)
         test_ppl = torch.exp(torch.tensor(avg_test_loss)).item()
+
+        # Single Epoch Duration
         epoch_time = time.time() - start_time
+        epoch_times.append(epoch_time)
         
 
         # Save Epoch Results

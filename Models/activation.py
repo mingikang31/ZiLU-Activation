@@ -8,35 +8,29 @@ import torch.nn.functional as F
 [3] ZiLU with adjustable parameter s
 """
 class GELU_s(nn.Module):
-    def __init__(self, sigma, inplace=False):
+    def __init__(self, sigma=None, inplace=False):
         super(GELU_s, self).__init__()
 
-        if sigma: 
-            self.sigma = sigma
-        else: 
-            self.sigma = nn.Parameter(torch.tensor(5.0))
-        
+        self.sigma = sigma if sigma else nn.Parameter(torch.tensor(5.0))
         self.kAlpha = 0.70710678118654752440
 
     def forward(self, x):
         return x * 0.5 * (1 + torch.erf(self.sigma * x * self.kAlpha))
 
 class SiLU_s(nn.Module):
-    def __init__(self, sigma, inplace=False):
+    def __init__(self, sigma=None, inplace=False):
         super(SiLU_s, self).__init__()
-        if sigma: 
-            self.sigma = sigma
-        else: 
-            self.sigma = nn.Parameter(torch.tensor(5.0))
+        
+        self.sigma = sigma if sigma else nn.Parameter(torch.tensor(5.0))
         
     def forward(self, x):
         return x * torch.sigmoid(self.sigma * x)
 
 class ZiLU_Old(nn.Module):
-    def __init__(self, sigma, inplace=False):
+    def __init__(self, sigma=None, inplace=False):
         super(ZiLU_Old, self).__init__()
 
-        self.sigma = sigma
+        self.sigma = sigma if sigma else nn.Parameter(torch.tensor(5.0))
         self.relu = nn.ReLU(inplace=inplace)
 
     def forward(self, x):
@@ -48,14 +42,11 @@ class ZiLU_Old(nn.Module):
 [3] ZiLU (Activation Function) using ArcTan
 [4] ZiLU Approximation (Activation Function) using ArcTan Approximation
 """
-
 class ArcTan(nn.Module):
     def __init__(self, sigma=None):
         super(ArcTan, self).__init__()
-        if sigma: 
-            self.sigma = sigma
-        else: 
-            self.sigma = nn.Parameter(torch.tensor(5.0))
+
+        self.sigma = sigma if sigma else nn.Parameter(torch.tensor(5.0))
 
     def forward(self, x):
         return 0.5 + (1.0 / torch.pi) * torch.arctan(self.sigma * x)
@@ -63,10 +54,8 @@ class ArcTan(nn.Module):
 class ArcTan_Approx(nn.Module):
     def __init__(self, sigma=None):
         super(ArcTan_Approx, self).__init__()
-        if sigma: 
-            self.sigma = sigma
-        else: 
-            self.sigma = nn.Parameter(torch.tensor(5.0))
+        
+        self.sigma = sigma if sigma else nn.Parameter(torch.tensor(5.0))
 
     def forward(self, x): 
         z = self.sigma * x 

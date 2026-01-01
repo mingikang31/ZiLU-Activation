@@ -11,7 +11,7 @@
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
 source ~/.bashrc 
-conda activate mingi 
+conda activate torch-a100
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
@@ -45,6 +45,7 @@ for ds in "${DATASETS[@]}"; do
             --batch_size 128 \
             --num_epochs 200 \
             --use_amp \
+            --compile \
             --clip_grad_norm 1.0 \
             --criterion CrossEntropy \
             --optimizer adamw \
@@ -99,6 +100,7 @@ for ds in "${DATASETS[@]}"; do
                 --batch_size 128 \
                 --num_epochs 200 \
                 --use_amp \
+                --compile \
                 --clip_grad_norm 1.0 \
                 --criterion CrossEntropy \
                 --optimizer adamw \

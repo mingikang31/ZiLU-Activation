@@ -31,7 +31,7 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir="./Output/NO-AUG/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/AUG/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
@@ -85,7 +85,7 @@ for ds in "${DATASETS[@]}"; do
 
             COUNT=$((COUNT + 1)) 
 
-            output_dir="./Output/NO-AUG/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
+            output_dir="./Output/AUG/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 

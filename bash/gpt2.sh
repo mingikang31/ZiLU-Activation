@@ -1,10 +1,10 @@
-#!/bin/bash 
+#! /bin/bash 
 #SBATCH --nodes=1 
-#SBATCH --mem=128G
-#SBATCH -p arm --gres=shard:4
-#SBATCH --cpus-per-task=48
+#SBATCH --mem=64G
+#SBATCH -p gpu --gres=gpu:a100:1
+#SBATCH --cpus-per-task=4
 #SBATCH --job-name=gpt2_exp
-#SBATCH --time=96:00:00
+#SBATCH --time=500:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT_80
@@ -22,6 +22,8 @@ LR="6e-4"
 
 COUNT=0
 FAILED=0
+
+export TORCH_FLOAT32_MATMUL_PRECISION=high
 
 # Baseline Experiments (ReLU, GeLU, SiLU) 
 for ds in "${DATASETS[@]}"; do 
@@ -43,15 +45,15 @@ for ds in "${DATASETS[@]}"; do
             --inplace \
             --dataset $ds \
             --data_path ./Data \
-            --batch_size 64 \
-            --num_epochs 10 \
+            --batch_size 48 \
+            --num_epochs 20 \
             --use_amp \
             --compile \
             --clip_grad_norm 1.0 \
             --optimizer adamw \
             --weight_decay 0.1 \
             --lr $LR \
-            --scheduler cosine \
+            --scheduler linear \
             --device cuda \
             --seed 42 \
             --output_dir $output_dir
@@ -97,15 +99,15 @@ for ds in "${DATASETS[@]}"; do
                 --inplace \
                 --dataset $ds \
                 --data_path ./Data \
-                --batch_size 32 \
-                --num_epochs 10 \
+                --batch_size 48 \
+                --num_epochs 20 \
                 --use_amp \
                 --compile \
                 --clip_grad_norm 1.0 \
                 --optimizer adamw \
                 --weight_decay 0.1 \
                 --lr $LR \
-                --scheduler cosine \
+                --scheduler linear \
                 --device cuda \
                 --seed 42 \
                 --output_dir $output_dir

@@ -8,6 +8,7 @@ from torch.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
 import torch.profiler
 from utils import set_seed
+from transformers import get_linear_schedule_with_warmup
 
 def Train_Eval(args, 
                model: nn.Module, 
@@ -188,14 +189,24 @@ def Train_Eval_GPT(args,
     elif args.optimizer == 'adamw':
         optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-    # Learning Rate Scheduler 
+    # Scheduler Setup
+    total_steps = len(train_loader) * args.num_epochs 
+    warmup_steps = int(0.05 * total_steps) # Warmup for 5% of training steps
+
+    # Learning Rate Scheduler
     scheduler = None
     if args.scheduler == 'step':
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_step, gamma=args.lr_gamma)
-    elif args.scheduler == 'cosine':
+    elif args.scheduler == 'cosine': 
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.num_epochs)
     elif args.scheduler == 'plateau':
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=5)
+    elif args.scheduler == 'linear': ## MAIN ONE IN USE
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer, 
+            num_warmup_steps=warmup_steps, 
+            num_training_steps=total_steps
+        )
 
     # Device 
     device = args.device 
@@ -209,7 +220,7 @@ def Train_Eval_GPT(args,
     try:
         batch = next(iter(train_loader))
 
-        tokens = torch.stack(batch["input_ids"]).to(device) 
+        tokens = torch.stack(batch["input_ids"]).to(device)        
         
         inputs = tokens[:, :-1].contiguous()
         targets = tokens[:, 1:].contiguous()
@@ -220,7 +231,7 @@ def Train_Eval_GPT(args,
             with_flops=True
         ) as prof:
             with torch.no_grad():
-                logits, loss = model(inputs, target=targets)
+                logits, loss = model(inputs[0:1], target=targets[0:1])
 
         # A more robust way to get total FLOPs: sum them up from all events
         total_flops = sum(event.flops for event in prof.key_averages())
@@ -239,7 +250,6 @@ def Train_Eval_GPT(args,
 
     # Training Loop 
     epoch_times = [] # Average Epoch Time
-
     min_perplexity = float('inf')
     min_epoch = 0
 
@@ -250,7 +260,7 @@ def Train_Eval_GPT(args,
         train_running_loss = 0.0
         model.train() 
         for batch in train_loader: 
-            tokens = torch.stack(batch["input_ids"]).to(device) 
+            tokens = torch.stack(batch["input_ids"]).to(device)      
 
             inputs = tokens[:, :-1].contiguous()
             targets = tokens[:, 1:].contiguous()
@@ -259,10 +269,18 @@ def Train_Eval_GPT(args,
             if args.use_amp: 
                 with autocast(device_type=args.device):
                     logits, loss = model(inputs, target=targets)
+
+                # nan for loss
+                if torch.isnan(loss):
+                    print(f"Warning: NaN loss at Epoch {epoch+1}")
+                    continue
+                    
                 scaler.scale(loss).backward()
+                
                 if args.clip_grad_norm: 
                     scaler.unscale_(optimizer) 
                     torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
+                
                 scaler.step(optimizer)
                 scaler.update()
             else: 
@@ -271,7 +289,9 @@ def Train_Eval_GPT(args,
                 if args.clip_grad_norm:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
                 optimizer.step()
-    
+            if scheduler and args.scheduler == 'linear':
+                scheduler.step()
+                
             train_running_loss += loss.item()
 
         avg_train_loss = train_running_loss / len(train_loader)
@@ -282,7 +302,7 @@ def Train_Eval_GPT(args,
         model.eval()
         with torch.no_grad():
             for batch in test_loader:
-                tokens = torch.stack(batch["input_ids"]).to(device) 
+                tokens = torch.stack(batch["input_ids"]).to(device)      
                 
                 inputs = tokens[:, :-1].contiguous()
                 targets = tokens[:, 1:].contiguous()
@@ -294,7 +314,6 @@ def Train_Eval_GPT(args,
                     logits, loss = model(inputs, target=targets)
 
                 test_running_loss += loss.item()
-
                 
         avg_test_loss = test_running_loss / len(test_loader)
         test_ppl = torch.exp(torch.tensor(avg_test_loss)).item()
@@ -305,7 +324,7 @@ def Train_Eval_GPT(args,
         
 
         # Save Epoch Results
-        epoch_results.append(f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {train_running_loss/len(train_loader):.8f} Perplexity: {train_ppl/len(train_loader):.2f} | [Test] Loss: {test_running_loss/len(test_loader):.8f} Perplexity: {test_ppl/len(test_loader):.2f}")
+        epoch_results.append(f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {avg_train_loss:.8f} Perplexity: {train_ppl:.2f} | [Test] Loss: {avg_test_loss:.8f} Perplexity: {test_ppl:.2f}")
         print(epoch_results[-1])
         
         # Min PPL 
@@ -314,7 +333,7 @@ def Train_Eval_GPT(args,
             min_epoch = epoch + 1
 
         # Learning Rate Scheduler Step
-        if scheduler: 
+        if scheduler and args.scheduler != 'linear': 
             if isinstance(scheduler, optim.lr_scheduler.ReduceLROnPlateau):
                 scheduler.step(test_ppl)
             else:

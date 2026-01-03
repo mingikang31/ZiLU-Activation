@@ -23,6 +23,7 @@ class GPT2(nn.Module):
                  embedding_dim=768,
                  num_attention_heads=12,
                  num_layers=12,
+                 dropout=0.1,
                  device='cuda'):
 
         super(GPT2, self).__init__()
@@ -34,15 +35,20 @@ class GPT2(nn.Module):
         self.embedding_dim = embedding_dim
         self.num_attention_heads = num_attention_heads
         self.num_layers = num_layers
+        self.dropout = dropout
+        
         self.device = device
 
+        # Dropout 
+        self.dropout = nn.Dropout(self.dropout)
+        
         # Embeddings 
         self.token_embeddings = nn.Embedding(vocab_size, embedding_dim)     
         self.position_embeddings = nn.Embedding(max_seq_length, embedding_dim)
         
         # Transformer Blocks    
         self.transformer_blocks = nn.ModuleList([
-            TransformerBlock(args, embedding_dim, num_attention_heads, embedding_dim * 4, max_seq_length)
+            TransformerBlock(args, embedding_dim, num_attention_heads, embedding_dim * 4, max_seq_length, dropout)
             for _ in range(num_layers)
         ])
 
@@ -51,9 +57,16 @@ class GPT2(nn.Module):
 
         # Linear output layer 
         self.lm_head = nn.Linear(embedding_dim, vocab_size, bias=False)
+        self.lm_head.weight = self.token_embeddings.weight
         
         # Initialize Weights 
         self.apply(self._init_weights)
+
+        # Scaled Initialization for Residual Layers 
+        for pn, p in self.named_parameters():
+            if p.dim() > 1:
+                if 'fc2' in pn or 'w_o' in pn:
+                    p.data.normal_(mean=0.0, std=0.02 / math.sqrt(2 * num_layers))
 
         self.name = f"GPT2_{num_layers}L_{num_attention_heads}H_{embedding_dim}D_{args.activation}"
         self.to(device)
@@ -79,6 +92,8 @@ class GPT2(nn.Module):
         token_embeds = self.token_embeddings(input_ids)
         position_embeds = self.position_embeddings(position_ids)
         x = token_embeds + position_embeds
+
+        x = self.dropout(x)
 
         # Transformer Blocks 
         for layer in self.transformer_blocks:
@@ -106,7 +121,7 @@ class GPT2(nn.Module):
         return total_params, trainable_params
     
 class CausalMultiHeadAttention(nn.Module):
-    def __init__(self, d_embeddings, num_heads, max_seq_length):
+    def __init__(self, d_embeddings, num_heads, max_seq_length, dropout):
         super(CausalMultiHeadAttention, self).__init__()
 
         assert d_embeddings % num_heads == 0, "Match Embeddings with Number of Heads"
@@ -121,6 +136,9 @@ class CausalMultiHeadAttention(nn.Module):
         self.w_q = nn.Linear(d_embeddings, d_embeddings)
         self.w_v = nn.Linear(d_embeddings, d_embeddings)
         self.w_o = nn.Linear(d_embeddings, d_embeddings)
+
+        self.attn_dropout = nn.Dropout(dropout)
+        self.resid_dropout = nn.Dropout(dropout)
 
         causal_mask = torch.tril(torch.ones(max_seq_length, max_seq_length)).view(1, 1, max_seq_length, max_seq_length)
         self.register_buffer('causal_mask', causal_mask)
@@ -146,14 +164,16 @@ class CausalMultiHeadAttention(nn.Module):
 
         # Softmax and weighting 
         attn_probs = F.softmax(attn_scores, dim=-1)
+        attn_probs = self.attn_dropout(attn_probs)
         attn_output = torch.matmul(attn_probs, v)
 
         attn_output = self.combine_heads(attn_output)
         attn_output = self.w_o(attn_output)
+        attn_output = self.resid_dropout(attn_output)
         return attn_output
 
 class MLP(nn.Module):
-    def __init__(self, args, d_model, d_ff):
+    def __init__(self, args, d_model, d_ff, dropout):
         super(MLP, self).__init__() 
 
          # Activation Selection
@@ -186,17 +206,20 @@ class MLP(nn.Module):
         self.fc2 = nn.Linear(d_ff, d_model)
         self.activation_function = self.activation_map[self.activation]()
 
+        self.dropout = nn.Dropout(dropout)
+
     def forward(self, x):
         x = self.fc1(x)
         x = self.activation_function(x)
         x = self.fc2(x)
+        x = self.dropout(x)
         return x
 
 class TransformerBlock(nn.Module):
-    def __init__(self, args, d_model, num_heads, d_ff, max_seq_length):
+    def __init__(self, args, d_model, num_heads, d_ff, max_seq_length, dropout):
         super(TransformerBlock, self).__init__()
-        self.attention = CausalMultiHeadAttention(d_model, num_heads, max_seq_length)
-        self.mlp = MLP(args, d_model, d_ff)
+        self.attention = CausalMultiHeadAttention(d_model, num_heads, max_seq_length, dropout)
+        self.mlp = MLP(args, d_model, d_ff, dropout)
         self.layer_norm1 = nn.LayerNorm(d_model)
         self.layer_norm2 = nn.LayerNorm(d_model)
 

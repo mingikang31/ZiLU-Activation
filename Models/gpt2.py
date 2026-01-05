@@ -80,8 +80,6 @@ class GPT2(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
-    
-
     def forward(self, input_ids, target=None):
         batch_size, seq_length = input_ids.size()
 
@@ -114,9 +112,6 @@ class GPT2(nn.Module):
     def parameter_count(self, non_embeddings=True): 
         total_params = sum(p.numel() for p in self.parameters())
         trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
-        if non_embeddings:
-            total_params -= self.token_embeddings.weight.numel() + self.position_embeddings.weight.numel()
-            trainable_params -= self.token_embeddings.weight.numel() + self.position_embeddings.weight.numel()
         
         return total_params, trainable_params
     

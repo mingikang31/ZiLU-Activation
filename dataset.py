@@ -18,8 +18,8 @@ class WikiText103:
     def __init__(self, args):
         self.max_seq_length = args.max_seq_length
         self.block_size = self.max_seq_length
-        self.cache_dir = os.path.join(args.data_path, "wikitext103_cache")
-
+        self.cache_dir = os.path.join(args.data_path, f"wikitext103_cache_{args.max_seq_length}")
+        
         # Tokenizer 
         self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
         self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -44,12 +44,13 @@ class WikiText103:
                 self.group_texts, 
                 batched=True
             )
+            self.lm_dataset.set_format(type="torch", columns=["input_ids"])
             self.lm_dataset.save_to_disk(self.cache_dir)
             print(f"Preprocessed dataset saved to {self.cache_dir}")
 
         # Data Loaders 
-        self.train_loader = DataLoader(dataset=self.lm_dataset["train"], batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=True)
-        self.test_loader = DataLoader(dataset=self.lm_dataset["test"], batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=True)
+        self.train_loader = DataLoader(dataset=self.lm_dataset["train"], batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=False)
+        self.test_loader = DataLoader(dataset=self.lm_dataset["test"], batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=False)
 
     def group_texts(self, examples): 
         concatenated = {k: sum(examples[k], []) for k in examples.keys()}

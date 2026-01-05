@@ -44,11 +44,11 @@ for ds in "${DATASETS[@]}"; do
             --activation $act \
             --inplace \
             --dataset $ds \
+            --compile \
+            --use_amp \
             --data_path ./Data \
             --batch_size 48 \
             --num_epochs 20 \
-            --use_amp \
-            --compile \
             --clip_grad_norm 1.0 \
             --optimizer adamw \
             --weight_decay 0.1 \
@@ -98,11 +98,11 @@ for ds in "${DATASETS[@]}"; do
                 --sigma $sigma \
                 --inplace \
                 --dataset $ds \
+                --compile \
+                --use_amp \
                 --data_path ./Data \
                 --batch_size 48 \
                 --num_epochs 20 \
-                --use_amp \
-                --compile \
                 --clip_grad_norm 1.0 \
                 --optimizer adamw \
                 --weight_decay 0.1 \

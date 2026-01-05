@@ -63,7 +63,7 @@ def Train_Eval(args,
             with_flops=True
         ) as prof:
             with torch.no_grad():
-                model(input_tensor[0:1])
+                model(input_tensor[0])
 
         total_flops = sum(event.flops for event in prof.key_averages())
         if total_flops > 0:
@@ -220,7 +220,7 @@ def Train_Eval_GPT(args,
     try:
         batch = next(iter(train_loader))
 
-        tokens = torch.stack(batch["input_ids"]).to(device)        
+        tokens = batch["input_ids"].to(device)
         
         inputs = tokens[:, :-1].contiguous()
         targets = tokens[:, 1:].contiguous()
@@ -260,7 +260,7 @@ def Train_Eval_GPT(args,
         train_running_loss = 0.0
         model.train() 
         for batch in train_loader: 
-            tokens = torch.stack(batch["input_ids"]).to(device)      
+            tokens = batch["input_ids"].to(device)
 
             inputs = tokens[:, :-1].contiguous()
             targets = tokens[:, 1:].contiguous()
@@ -291,7 +291,7 @@ def Train_Eval_GPT(args,
                 optimizer.step()
             if scheduler and args.scheduler == 'linear':
                 scheduler.step()
-                
+
             train_running_loss += loss.item()
 
         avg_train_loss = train_running_loss / len(train_loader)
@@ -301,9 +301,9 @@ def Train_Eval_GPT(args,
         test_running_loss = 0.0
         model.eval()
         with torch.no_grad():
-            for batch in test_loader:
-                tokens = torch.stack(batch["input_ids"]).to(device)      
-                
+            for batch in test_loader:   
+                tokens = batch["input_ids"].to(device)
+
                 inputs = tokens[:, :-1].contiguous()
                 targets = tokens[:, 1:].contiguous()
 

@@ -1,13 +1,14 @@
 datasets
 transformers
 tokenizers
-fsspec
+fsspec<=2025.10.0
 filelock
 tiktoken
 numpy
-matplotlib
+matplotlib<3.9
 tqdm
 torch
+torchsummary
 torchvision
 pytorch-ignite
 pytorch-lightning

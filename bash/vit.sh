@@ -1,17 +1,17 @@
-#!/bin/bash 
+#! /bin/bash 
 #SBATCH --nodes=1 
-#SBATCH --mem=128G
-#SBATCH -p arm --gres=shard:32
-#SBATCH --cpus-per-task=48
+#SBATCH --mem=64G
+#SBATCH -p gpu --gres=gpu:a100:1
+#SBATCH --cpus-per-task=4
 #SBATCH --job-name=vit_exp
-#SBATCH --time=96:00:00
+#SBATCH --time=500:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
 source ~/.bashrc
-conda activate torch-gh200
+conda activate torch-a100
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 

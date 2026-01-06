@@ -63,7 +63,7 @@ def Train_Eval(args,
             with_flops=True
         ) as prof:
             with torch.no_grad():
-                model(input_tensor[0])
+                model(input_tensor[0:1])
 
         total_flops = sum(event.flops for event in prof.key_averages())
         if total_flops > 0:
@@ -176,7 +176,8 @@ Measuring Perplexity (PPL) for GPT Models.
 def Train_Eval_GPT(args, 
                    model: nn.Module, 
                    train_loader, 
-                   test_loader
+                   test_loader, 
+                   val_loader
                    ):
     if args.seed != 0:
         set_seed(args.seed)
@@ -256,7 +257,7 @@ def Train_Eval_GPT(args,
     for epoch in range(args.num_epochs):
         start_time = time.time() 
 
-        # Model Training 
+        # Training Loop
         train_running_loss = 0.0
         model.train() 
         for batch in train_loader: 
@@ -297,11 +298,11 @@ def Train_Eval_GPT(args,
         avg_train_loss = train_running_loss / len(train_loader)
         train_ppl = torch.exp(torch.tensor(avg_train_loss)).item()
         
-        # Evaluation Loop
-        test_running_loss = 0.0
+        # Validation Loop
+        val_running_loss = 0.0
         model.eval()
         with torch.no_grad():
-            for batch in test_loader:   
+            for batch in val_loader:   
                 tokens = batch["input_ids"].to(device)
 
                 inputs = tokens[:, :-1].contiguous()
@@ -313,10 +314,10 @@ def Train_Eval_GPT(args,
                 else:
                     logits, loss = model(inputs, target=targets)
 
-                test_running_loss += loss.item()
+                val_running_loss += loss.item()
                 
-        avg_test_loss = test_running_loss / len(test_loader)
-        test_ppl = torch.exp(torch.tensor(avg_test_loss)).item()
+        avg_val_loss = val_running_loss / len(val_loader)
+        val_ppl = torch.exp(torch.tensor(avg_val_loss)).item()
 
         # Single Epoch Duration
         epoch_time = time.time() - start_time
@@ -324,24 +325,48 @@ def Train_Eval_GPT(args,
         
 
         # Save Epoch Results
-        epoch_results.append(f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {avg_train_loss:.8f} Perplexity: {train_ppl:.2f} | [Test] Loss: {avg_test_loss:.8f} Perplexity: {test_ppl:.2f}")
+        epoch_results.append(f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {avg_train_loss:.8f} Perplexity: {train_ppl:.2f} | [Val] Loss: {avg_val_loss:.8f} Perplexity: {val_ppl:.2f}")
         print(epoch_results[-1])
         
         # Min PPL 
-        if test_ppl < min_perplexity:
-            min_perplexity = test_ppl
+        if val_ppl < min_perplexity:
+            min_perplexity = val_ppl
             min_epoch = epoch + 1
 
         # Learning Rate Scheduler Step
         if scheduler and args.scheduler != 'linear': 
             if isinstance(scheduler, optim.lr_scheduler.ReduceLROnPlateau):
-                scheduler.step(test_ppl)
+                scheduler.step(val_ppl)
             else:
                 scheduler.step()
 
+
+    # Test Loop (Final Evaluation)
+    test_running_loss = 0.0
+    model.eval()
+    with torch.no_grad():
+        for batch in test_loader:   
+            tokens = batch["input_ids"].to(device)
+
+            inputs = tokens[:, :-1].contiguous()
+            targets = tokens[:, 1:].contiguous()
+
+            if args.use_amp:
+                with autocast(device_type=args.device):
+                    logits, loss = model(inputs, target=targets)
+            else:
+                logits, loss = model(inputs, target=targets)
+
+            test_running_loss += loss.item()
+                
+    avg_test_loss = test_running_loss / len(test_loader)
+    test_ppl = torch.exp(torch.tensor(avg_test_loss)).item()
+
+    epoch_results.append(f"\n[Test] Loss: {avg_test_loss:.8f} Perplexity: {test_ppl:.2f}")
+                
     epoch_results.append(f"\nAverage Epoch Time: {sum(epoch_times) / len(epoch_times):.4f}s")
     epoch_results.append(f"Min Perplexity: {min_perplexity:.4f} at Epoch {min_epoch}")
-    
+
     return epoch_results
         
 

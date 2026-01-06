@@ -49,8 +49,26 @@ class WikiText103:
             print(f"Preprocessed dataset saved to {self.cache_dir}")
 
         # Data Loaders 
-        self.train_loader = DataLoader(dataset=self.lm_dataset["train"], batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=False)
-        self.test_loader = DataLoader(dataset=self.lm_dataset["test"], batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=False)
+        self.train_loader = DataLoader(
+            dataset=self.lm_dataset["train"], 
+            batch_size=args.batch_size, 
+            shuffle=True, 
+            num_workers=2, 
+            pin_memory=True)
+        
+        self.test_loader = DataLoader(
+            dataset=self.lm_dataset["test"], 
+            batch_size=args.batch_size, 
+            shuffle=False, 
+            num_workers=2, 
+            pin_memory=True)
+        
+        self.val_loader = DataLoader(
+            dataset=self.lm_dataset["validation"], 
+            batch_size=args.batch_size, 
+            shuffle=False, 
+            num_workers=2, 
+            pin_memory=True)
 
     def group_texts(self, examples): 
         concatenated = {k: sum(examples[k], []) for k in examples.keys()}

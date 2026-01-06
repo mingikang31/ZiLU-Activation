@@ -9,5 +9,14 @@
 - fixed lm_head.weight to be token_embeddings weight
 - The projection layers must be scaled down by 1/sqrt(2 * layers)
 
+### GPT2 Small low perplexity 
+- GPT2 small on WikiText103 with ReLU activation function gets around 15.73 perplexity after 20 epochs of training. 
+	- Literature's "37.5" benchmark is usually zero-shot (trained on internet and tested on wikitext)
+	- BPE vs. Word-Level - Our model uses GPT-2 Tokenizer (Byte-Pair Encoding -> splits words into chunks)
+		- Standard "word-level" benchmarks calculate perplexity per word. 
+** 15.73 BPE perplexity is strong & valid baseline for benchmark
+
+
 ## Conda Environments
 - torch-a100 is able to use amp, compile, and huggingface datasets, tranformers, pytorch, etc. 
+

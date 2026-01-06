@@ -133,7 +133,8 @@ def main(args):
             args=args,
             model=model, 
             train_loader=dataset.train_loader, 
-            test_loader=dataset.test_loader   
+            test_loader=dataset.test_loader, 
+            val_loader=dataset.val_loader
         )
 
         # Store Results

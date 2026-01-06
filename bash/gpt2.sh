@@ -47,7 +47,7 @@ for ds in "${DATASETS[@]}"; do
             --compile \
             --use_amp \
             --data_path ./Data \
-            --batch_size 48 \
+            --batch_size 32 \
             --num_epochs 20 \
             --clip_grad_norm 1.0 \
             --optimizer adamw \
@@ -101,7 +101,7 @@ for ds in "${DATASETS[@]}"; do
                 --compile \
                 --use_amp \
                 --data_path ./Data \
-                --batch_size 48 \
+                --batch_size 32 \
                 --num_epochs 20 \
                 --clip_grad_norm 1.0 \
                 --optimizer adamw \

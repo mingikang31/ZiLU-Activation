@@ -97,7 +97,6 @@ for ds in "${DATASETS[@]}"; do
                 --sigma $sigma \
                 --inplace \
                 --dataset $ds \
-                --compile \
                 --use_amp \
                 --data_path ./Data \
                 --batch_size 32 \

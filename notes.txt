@@ -4,6 +4,11 @@
 ## GPT2 WikiText103 Notes
 - 32 batch size takes 50,566M or 50.6 GB of memory. 
 
+** GH200 ARM with batch size 40 takes 91,993M or 91.9 GB of memory (total 97.8GB of memory) **
+- [0] NVIDIA GH200 480GB | 54°C, 100 % | 91993 / 97871 MB | mkang2(91986M) 
+
+- GELU_s needs more memory and need to do batch size = 32
+
 - Learning Rate Warmup is necessary: start with learning rate at 0 and linearly increase it over the first ~1000 steps (or 5% of training)
 
 - fixed lm_head.weight to be token_embeddings weight
@@ -14,9 +19,10 @@
 	- Literature's "37.5" benchmark is usually zero-shot (trained on internet and tested on wikitext)
 	- BPE vs. Word-Level - Our model uses GPT-2 Tokenizer (Byte-Pair Encoding -> splits words into chunks)
 		- Standard "word-level" benchmarks calculate perplexity per word. 
-** 15.73 BPE perplexity is strong & valid baseline for benchmark
+** 15.73 BPE perplexity is strong & valid baseline for benchmark with GPT2 Small ReLU Activation Function ** 
 
 
 ## Conda Environments
 - torch-a100 is able to use amp, compile, and huggingface datasets, tranformers, pytorch, etc. 
+- torch-gh200 is not able to use compile (
 

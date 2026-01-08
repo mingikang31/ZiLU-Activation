@@ -17,7 +17,8 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 
 DATASETS=("wikitext103")
 # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu' 'zilu_approx')
-ACTIVATIONS=('gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu' 'zilu_approx')
+# ACTIVATIONS=('gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu' 'zilu_approx')
+ACTIVATIONS=('gelu_s' 'zilu' 'zilu_approx')
 LR="6e-4"
 
 COUNT=0
@@ -44,10 +45,9 @@ for ds in "${DATASETS[@]}"; do
             --activation $act \
             --inplace \
             --dataset $ds \
-            --compile \
             --use_amp \
             --data_path ./Data \
-            --batch_size 64 \
+            --batch_size 32 \
             --num_epochs 20 \
             --clip_grad_norm 1.0 \
             --optimizer adamw \
@@ -101,7 +101,7 @@ done
 #                 --compile \
 #                 --use_amp \
 #                 --data_path ./Data \
-#                 --batch_size 64 \
+#                 --batch_size 56 \
 #                 --num_epochs 20 \
 #                 --clip_grad_norm 1.0 \
 #                 --optimizer adamw \

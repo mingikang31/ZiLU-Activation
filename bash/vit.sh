@@ -69,7 +69,8 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 
 
 # Vary Sigmas 
-DATASETS=("cifar10" "cifar100")
+# DATASETS=("cifar10" "cifar100")
+DATASETS=("cifar100")
 # ACTIVATIONS=('gelu_s' 'silu_s' 'zilu_old' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
 # ACTIVATIONS=('zilu' 'zilu_approx')
 ACTIVATIONS=('silu_s' 'gelu_s')

@@ -53,21 +53,21 @@ class WikiText103:
             dataset=self.lm_dataset["train"], 
             batch_size=args.batch_size, 
             shuffle=True, 
-            num_workers=2, 
+            num_workers=6, 
             pin_memory=True)
         
         self.test_loader = DataLoader(
             dataset=self.lm_dataset["test"], 
             batch_size=args.batch_size, 
             shuffle=False, 
-            num_workers=2, 
+            num_workers=6, 
             pin_memory=True)
         
         self.val_loader = DataLoader(
             dataset=self.lm_dataset["validation"], 
             batch_size=args.batch_size, 
             shuffle=False, 
-            num_workers=2, 
+            num_workers=6, 
             pin_memory=True)
 
     def group_texts(self, examples): 
@@ -137,8 +137,8 @@ class CIFAR100(datasets.CIFAR100):
         self.test_data = datasets.CIFAR100(root=args.data_path, train=False, download=True, transform=test_transform)
 
         # Data Loaders
-        self.train_loader = DataLoader(dataset=self.train_data, batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=True)
-        self.test_loader = DataLoader(dataset=self.test_data, batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=True)
+        self.train_loader = DataLoader(dataset=self.train_data, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True)
+        self.test_loader = DataLoader(dataset=self.test_data, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
 
         # Set image size and number of classes
         self.img_size = (3, args.resize, args.resize) if args.resize else (3, 32, 32)
@@ -189,8 +189,8 @@ class CIFAR10(datasets.CIFAR10):
         self.test_data = datasets.CIFAR10(root=args.data_path, train=False, download=True, transform=test_transform)
 
         # Data Loaders
-        self.train_loader = DataLoader(dataset=self.train_data, batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=True)
-        self.test_loader = DataLoader(dataset=self.test_data, batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=True)
+        self.train_loader = DataLoader(dataset=self.train_data, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True)
+        self.test_loader = DataLoader(dataset=self.test_data, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
 
         # Set image size and number of classes
         self.img_size = (3, args.resize, args.resize) if args.resize else (3, 32, 32)

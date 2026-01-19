@@ -75,9 +75,11 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 # Vary Sigmas 
 DATASETS=("wikitext103")
 # ACTIVATIONS=('gelu_s' 'silu_s' 'zilu' 'zilu_approx')
-ACTIVATIONS=('silu_s' 'zilu' 'zilu_approx')
+# ACTIVATIONS=('silu_s' 'zilu' 'zilu_approx')
+ACTIVATIONS=('zilu' 'zilu_approx')
 LR="6e-4"
-SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
+# SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
+SIGMAS=("1.0" "5.0" "0.1" "0.5" "10.0" "50.0" "100.0" "500.0" "1000.0")
 
 # Vary sigmas
 for ds in "${DATASETS[@]}"; do 

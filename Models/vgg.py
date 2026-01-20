@@ -54,7 +54,7 @@ class VGG(nn.Module):
         layers = [] 
 
         # Activation function mapping
-        activation_map = {
+        self.activation_map = {
             "relu": lambda: nn.ReLU(inplace=args.inplace), 
             "silu": lambda: nn.SiLU(inplace=args.inplace), 
             "gelu": lambda: nn.GELU(), 
@@ -69,10 +69,26 @@ class VGG(nn.Module):
             "arctan": lambda: ArcTan(sigma=args.sigma), 
             "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
             "zilu": lambda: ZiLU(sigma=args.sigma), 
-            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma) 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma), 
+
+            # Other Activations
+            "leaky_relu": lambda: nn.LeakyReLU(inplace=args.inplace), 
+            "prelu": lambda: nn.PReLU(), 
+            "elu": lambda: nn.ELU(inplace=args.inplace), 
+            "hardshrink": lambda: nn.Hardshrink(), 
+            "softshrink": lambda: nn.Softshrink(), 
+            "tanhshrink": lambda: nn.Tanhshrink(), 
+            "softplus": lambda: nn.Softplus(),
+            "softsign": lambda: nn.Softsign(), 
+            "tanh": lambda: nn.Tanh(),
+            "celu": lambda: nn.CELU(inplace=args.inplace),
+            "mish": lambda: nn.Mish(inplace=args.inplace), 
+            "hardswish": lambda: nn.Hardswish(inplace=args.inplace), 
+            "hardsigmoid": lambda: nn.Hardsigmoid(inplace=args.inplace),
+            "selu": lambda: nn.SELU(inplace=args.inplace)
         }
 
-        if self.activation not in activation_map:
+        if self.activation not in self.activation_map:
             raise ValueError(f"Unsupported activation function: {self.activation}")
             
         for v in cfg[features_config]:
@@ -81,7 +97,7 @@ class VGG(nn.Module):
             else:
                 layers += [nn.Conv2d(in_channels, v, kernel_size=3, stride=1, padding=1), 
                          nn.BatchNorm2d(v), 
-                         activation_map[self.activation]()
+                         self.activation_map[self.activation]()
                          ]
                         
                 in_channels = v
@@ -91,10 +107,10 @@ class VGG(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         self.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 4096),
-            activation_map[self.activation](), 
+            self.activation_map[self.activation](), 
             nn.Dropout(dropout),
             nn.Linear(4096, 4096),
-            activation_map[self.activation](),
+            self.activation_map[self.activation](),
             nn.Dropout(dropout),
             nn.Linear(4096, num_classes)
         )

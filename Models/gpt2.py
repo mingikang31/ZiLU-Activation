@@ -190,7 +190,23 @@ class MLP(nn.Module):
             "arctan": lambda: ArcTan(sigma=args.sigma), 
             "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
             "zilu": lambda: ZiLU(sigma=args.sigma), 
-            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma) 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma), 
+
+            # Other Activations
+            "leaky_relu": lambda: nn.LeakyReLU(inplace=args.inplace), 
+            "prelu": lambda: nn.PReLU(), 
+            "elu": lambda: nn.ELU(inplace=args.inplace), 
+            "hardshrink": lambda: nn.Hardshrink(), 
+            "softshrink": lambda: nn.Softshrink(), 
+            "tanhshrink": lambda: nn.Tanhshrink(), 
+            "softplus": lambda: nn.Softplus(),
+            "softsign": lambda: nn.Softsign(), 
+            "tanh": lambda: nn.Tanh(),
+            "celu": lambda: nn.CELU(inplace=args.inplace),
+            "mish": lambda: nn.Mish(inplace=args.inplace), 
+            "hardswish": lambda: nn.Hardswish(inplace=args.inplace), 
+            "hardsigmoid": lambda: nn.Hardsigmoid(inplace=args.inplace),
+            "selu": lambda: nn.SELU(inplace=args.inplace)
         }
 
         if self.activation not in self.activation_map:

@@ -25,7 +25,12 @@ def args_parser():
     parser.add_argument('--dropout', type=float, default=0.1, help='Dropout for model')
 
     # Activation Function Args 
-    parser.add_argument('--activation', type=str, default='gelu', choices=['relu', 'gelu', 'silu', 'sigmoid', 'gelu_s', 'silu_s', 'zilu_old', 'arctan', 'arctan_approx', 'zilu', 'zilu_approx'], help='Activation function to use')
+    parser.add_argument('--activation', type=str, default='relu', choices=[
+        'relu', 'gelu', 'silu', 'sigmoid', 'gelu_s', 'silu_s', 'zilu_old', 
+        'arctan', 'arctan_approx', 'zilu', 'zilu_approx', 'leaky_relu', 'prelu', 
+        'elu', 'hardshrink', 'softshrink', 'tanhshrink', 'hardtanh', 'softplus', 'softsign', 
+        'tanh', 'celu', 'mish', 'hardswish', 'hardsigmoid', 'selu'
+    ], help='Activation function to use')    
     parser.add_argument('--sigma', type=float, default=None, help='Sigma parameter for ZiLU activation function')
     parser.add_argument('--inplace', action='store_true', help='Use inplace activation functions')
     parser.set_defaults(inplace=False)

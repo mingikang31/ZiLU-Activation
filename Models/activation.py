@@ -77,6 +77,13 @@ class ZiLU_Approx(nn.Module):
     def forward(self, x):
         return x * self.arctan_approx(x)
 
+class SquarePlus(nn.Module):
+    def __init__(self, beta=4):
+        super(SquarePlus, self).__init__()
+        self.beta = beta 
+
+    def forward(self, x):
+        return 0.5 * (x + torch.sqrt(x**2 + beta))
 
 
 if __name__ == "__main__":

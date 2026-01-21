@@ -7,9 +7,11 @@ resize: None
 augment: True
 noise: 0.0
 data_path: ./Data
+compile: True
+compile_mode: default
 batch_size: 128
 num_epochs: 200
-use_amp: False
+use_amp: True
 clip_grad_norm: 10.0
 criterion: CrossEntropy
 optimizer: adamw

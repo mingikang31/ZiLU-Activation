@@ -8,7 +8,7 @@ import numpy as np
 
 # Activation Functions 
 from Models.activation import (GELU_s, SiLU_s, ZiLU_Old, ArcTan,
-                               ArcTan_Approx, ZiLU, ZiLU_Approx)
+                               ArcTan_Approx, ZiLU, ZiLU_Approx, SquarePlus)
 
 '''VGG Model Class'''
 class ViT(nn.Module): 
@@ -207,6 +207,7 @@ class TransformerEncoder(nn.Module):
             "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
             "zilu": lambda: ZiLU(sigma=args.sigma), 
             "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma), 
+            "squareplus": lambda: SquarePlus(beta=4),
 
             # Other Activations
             "leaky_relu": lambda: nn.LeakyReLU(inplace=args.inplace), 
@@ -222,7 +223,8 @@ class TransformerEncoder(nn.Module):
             "mish": lambda: nn.Mish(inplace=args.inplace), 
             "hardswish": lambda: nn.Hardswish(inplace=args.inplace), 
             "hardsigmoid": lambda: nn.Hardsigmoid(inplace=args.inplace),
-            "selu": lambda: nn.SELU(inplace=args.inplace)
+            "selu": lambda: nn.SELU(inplace=args.inplace),
+            "hardtanh": lambda: nn.HardTanh(inplace=args.inplace)
         }
 
         if self.activation not in self.activation_map:

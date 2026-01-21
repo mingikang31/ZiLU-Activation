@@ -16,7 +16,7 @@ conda activate torch-pro6000
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
 DATASETS=("cifar10" "cifar100")
-ACTIVATIONS=('silu' 'leaky_relu' 'prelu' 'elu' 'hardshrink' 'softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
+ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx' 'gelu_s' 'silu_s' 'leaky_relu' 'prelu' 'elu' 'hardshrink' 'softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
 # # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
 # # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'zilu' 'zilu_approx')
 # ACTIVATIONS=('gelu_s' 'silu_s')
@@ -31,7 +31,7 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir="./Output/AUG/VGG19/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/AUG/VGG19-2/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
@@ -46,7 +46,7 @@ for ds in "${DATASETS[@]}"; do
             --num_epochs 200 \
             --use_amp \
             --compile \
-            --clip_grad_norm 10.0 \
+            --clip_grad_norm 1.0 \
             --criterion CrossEntropy \
             --optimizer adamw \
             --weight_decay 1e-2 \

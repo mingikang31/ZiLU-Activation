@@ -83,7 +83,7 @@ class SquarePlus(nn.Module):
         self.beta = beta 
 
     def forward(self, x):
-        return 0.5 * (x + torch.sqrt(x**2 + beta))
+        return 0.5 * (x + torch.sqrt(x**2 + self.beta))
 
 
 if __name__ == "__main__":

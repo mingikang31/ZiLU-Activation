@@ -16,7 +16,8 @@ conda activate torch-pro6000
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
 DATASETS=("cifar10" "cifar100")
-ACTIVATIONS=('leaky_relu' 'prelu' 'elu' 'hardshrink' 'softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
+ACTIVATIONS=('hardtanh' 'squareplus')
+# ACTIVATIONS=('leaky_relu' 'prelu' 'elu' 'hardshrink' 'softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
 # # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
 # # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'zilu' 'zilu_approx')
 # ACTIVATIONS=('gelu_s' 'silu_s')

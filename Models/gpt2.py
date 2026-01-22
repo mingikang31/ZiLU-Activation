@@ -208,7 +208,7 @@ class MLP(nn.Module):
             "hardswish": lambda: nn.Hardswish(inplace=args.inplace), 
             "hardsigmoid": lambda: nn.Hardsigmoid(inplace=args.inplace),
             "selu": lambda: nn.SELU(inplace=args.inplace),
-            "hardtanh": lambda: nn.HardTanh(inplace=args.inplace)
+            "hardtanh": lambda: nn.Hardtanh(inplace=args.inplace)
         }
 
         if self.activation not in self.activation_map:

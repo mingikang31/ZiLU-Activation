@@ -54,6 +54,7 @@ def Train_Eval(args,
 
     ## [GFLOPS] Computation using PyTorch Profiler ##
     try:
+        model.eval()
         input_tensor, _ = next(iter(train_loader))
         input_tensor = input_tensor.to(device)
 

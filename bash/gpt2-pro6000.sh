@@ -1,25 +1,23 @@
-#!/bin/bash 
+#! /bin/bash 
 #SBATCH --nodes=1 
-#SBATCH --mem=128G
-#SBATCH -p arm --gres=shard:32
-#SBATCH --cpus-per-task=48
+#SBATCH --mem=64G
+#SBATCH -p mixed --gres=gpu:pro6000:1
+#SBATCH --cpus-per-gpu=16
 #SBATCH --job-name=gpt2_exp
-#SBATCH --time=96:00:00
+#SBATCH --time=500:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
 source ~/.bashrc
-conda activate torch-gh200
+conda activate torch-pro6000
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
+
 # DATASETS=("wikitext103")
-# # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu' 'zilu_approx')
-# # ACTIVATIONS=('gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu' 'zilu_approx')
-# # ACTIVATIONS=('gelu_s' 'zilu' 'zilu_approx')
-# ACTIVATIONS=('silu_s')
+# ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu' 'zilu_approx')
 # LR="6e-4"
 
 # COUNT=0
@@ -46,6 +44,7 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 #             --activation $act \
 #             --inplace \
 #             --dataset $ds \
+#             --compile \
 #             --use_amp \
 #             --data_path ./Data \
 #             --batch_size 32 \
@@ -74,12 +73,9 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 
 # Vary Sigmas 
 DATASETS=("wikitext103")
-# ACTIVATIONS=('gelu_s' 'silu_s' 'zilu' 'zilu_approx')
-# ACTIVATIONS=('silu_s' 'zilu' 'zilu_approx')
-ACTIVATIONS=('zilu_approx')
+ACTIVATIONS=('gelu_s' 'silu_s' 'zilu' 'zilu_approx')
 LR="6e-4"
-# SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
-SIGMAS=("10.0" "50.0" "100.0" "500.0" "1000.0")
+SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
 
 # Vary sigmas
 for ds in "${DATASETS[@]}"; do 

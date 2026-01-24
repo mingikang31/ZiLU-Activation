@@ -49,7 +49,15 @@ def args_parser():
     parser.add_argument("--use_amp", action="store_true", help="Use mixed precision training")
     parser.set_defaults(use_amp=False)
     parser.add_argument("--clip_grad_norm", type=float, default=1.0, help="Gradient clipping value")
-
+    
+    # Data Loader Specific
+    parser.add_argument("--num_workers", type=int, default=4, help="Number of workers for data loading")
+    parser.add_argument("--persistent_workers", action="store_true", help="Use persistent workers for data loading")
+    parser.set_defaults(persistent_workers=False)
+    parser.add_argument("--prefetch_factor", type=int, default=None, help="Prefetch factor for data loading")
+    parser.add_argument("--pin_memory", action="store_true", help="Pin memory for data loading")
+    parser.set_defaults(pin_memory=False)
+    
     # Optimizer Arguments
     parser.add_argument('--optimizer', type=str, default='adamw', choices=['adam', 'adamw'], help='Default Optimizer: adamw')
     parser.add_argument('--weight_decay', type=float, default=0.1, help='Weight decay for optimizer') # For Adam & Adamw

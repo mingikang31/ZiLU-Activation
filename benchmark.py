@@ -1,27 +1,97 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import time
 import pandas as pd
-from Models.activation import *
+
+## TODO use nn.functional where possible for speed as they are often faster than nn.Module counterparts
+## TODO implement squareplus activation for benchmarking
+"""
+Activation Functions
+"""
+def SquarePlus(x, beta=4):
+    """Squareplus activation function."""
+    return 0.5 * (x + torch.sqrt(x**2 + beta))
+
+def ReLU(x):
+    return F.relu(x)
+
+def SiLU(x):
+    return F.silu(x)
+
+def GELU(x):
+    return F.gelu(x)
+
+def Sigmoid(x):
+    return F.sigmoid(x)
+
+def LeakyReLU(x, negative_slope=0.01):
+    return F.leaky_relu(x, negative_slope=negative_slope)
+
+def PReLU(x, weight=0.25):
+    return F.prelu(x, torch.tensor(weight, device=x.device, dtype=x.dtype))
+
+def ELU(x, alpha=1.0):
+    return F.elu(x, alpha=alpha)
+
+def Hardshrink(x, lambd=0.5):
+    return F.hardshrink(x, lambd=lambd)
+
+def Softshrink(x, lambd=0.5):
+    return F.softshrink(x, lambd=lambd)
+
+def Tanhshrink(x):
+    return F.tanhshrink(x)
+
+def Hardtanh(x, min_val=-1.0, max_val=1.0):
+    return F.hardtanh(x, min_val=min_val, max_val=max_val)
+
+def Softplus(x, beta=1, threshold=20):
+    return F.softplus(x, beta=beta, threshold=threshold)
+
+def Softsign(x):
+    return F.softsign(x)
+
+def Tanh(x):
+    return F.tanh(x)
+
+def CELU(x, alpha=1.0):
+    return F.celu(x, alpha=alpha)
+
+def Swish(x):
+    return F.silu(x)  # Swish is equivalent to SiLU
+
+def Mish(x):
+    return F.mish(x)
+
+def HardSwish(x):
+    return F.hardswish(x)
+
+def HardSigmoid(x):
+    return F.hardsigmoid(x)
+
+def ArcTan(x):
+    return 0.5 + (1.0 / torch.pi) * torch.arctan(x)
+
+def ArcTan_Approx(x):
+    return (0.5 + torch.clamp(x, min=0)) / (1.0 + torch.abs(x))
+
+def ZiLU(x):
+    return x * (0.5 + (1.0 / torch.pi) * torch.arctan(x))
+
+def ZiLU_Approx(x):
+    return x * ((0.5 + torch.clamp(x, min=0)) / (1.0 + torch.abs(x)))
+
 
 """
 Time benchmarking for various activation functions on different devices (forward and backward passes). 
 """
-def benchmark_activation(activation_fn, input_tensor, device, num_warmup=10, num_iterations=100, compile=True):
+# ...existing code...
+
+def benchmark_activation(activation_fn, input_tensor, device, num_warmup=10, num_iterations=100, compile=False):
     """
     Benchmark forward and backward pass times for an activation function.
-    
-    Args:
-        activation_fn: The activation function module
-        input_tensor: Input tensor for testing
-        device: Device to run on ('cpu', 'mps', 'cuda')
-        num_warmup: Number of warmup iterations
-        num_iterations: Number of timed iterations
-    
-    Returns:
-        dict with forward_time and backward_time in milliseconds
     """
-    activation_fn = activation_fn.to(device)
     input_tensor = input_tensor.to(device)
 
     if compile: 
@@ -29,10 +99,10 @@ def benchmark_activation(activation_fn, input_tensor, device, num_warmup=10, num
         
     # Warmup
     for _ in range(num_warmup):
-        output = activation_fn(input_tensor)
-        if input_tensor.requires_grad:
+        test_input = input_tensor.clone().detach().requires_grad_(True)
+        output = activation_fn(test_input)
+        if test_input.requires_grad:
             output.sum().backward()
-            input_tensor.grad = None
     
     # Synchronize device
     if device == 'cuda':
@@ -43,16 +113,15 @@ def benchmark_activation(activation_fn, input_tensor, device, num_warmup=10, num
     # Benchmark forward pass
     forward_times = []
     for _ in range(num_iterations):
+        test_input = input_tensor.clone().detach().requires_grad_(True)
+        
         if device == 'cuda':
             torch.cuda.synchronize()
-            start = time.perf_counter()
         elif device == 'mps':
             torch.mps.synchronize()
-            start = time.perf_counter()
-        else:
-            start = time.perf_counter()
-        
-        output = activation_fn(input_tensor)
+            
+        start = time.perf_counter()
+        output = activation_fn(test_input)
         
         if device == 'cuda':
             torch.cuda.synchronize()
@@ -60,23 +129,25 @@ def benchmark_activation(activation_fn, input_tensor, device, num_warmup=10, num
             torch.mps.synchronize()
         
         end = time.perf_counter()
-        forward_times.append((end - start) * 1000)  # Convert to ms
+        forward_times.append((end - start) * 1000)
+        
+        # Keep output alive to prevent optimization
+        del output
     
     # Benchmark backward pass
     backward_times = []
     for _ in range(num_iterations):
-        output = activation_fn(input_tensor)
+        test_input = input_tensor.clone().detach().requires_grad_(True)
+        output = activation_fn(test_input)
+        loss = output.sum()
         
         if device == 'cuda':
             torch.cuda.synchronize()
-            start = time.perf_counter()
         elif device == 'mps':
             torch.mps.synchronize()
-            start = time.perf_counter()
-        else:
-            start = time.perf_counter()
-        
-        output.sum().backward()
+            
+        start = time.perf_counter()
+        loss.backward()
         
         if device == 'cuda':
             torch.cuda.synchronize()
@@ -84,9 +155,7 @@ def benchmark_activation(activation_fn, input_tensor, device, num_warmup=10, num
             torch.mps.synchronize()
         
         end = time.perf_counter()
-        backward_times.append((end - start) * 1000)  # Convert to ms
-        
-        input_tensor.grad = None
+        backward_times.append((end - start) * 1000)
     
     return {
         'forward_mean': sum(forward_times) / len(forward_times),
@@ -94,46 +163,42 @@ def benchmark_activation(activation_fn, input_tensor, device, num_warmup=10, num
         'backward_mean': sum(backward_times) / len(backward_times),
         'backward_std': torch.tensor(backward_times).std().item()
     }
-
+    
 def run_benchmarks():
     """Run benchmarks for all activation functions on all available devices."""
     
     # Test configuration
-    batch_size = 64
-    input_size = 1024
-    sigma = 5.0
+    input_size = 1000000  # 1 million elements
     
     # Create test input
-    input_tensor = torch.randn(batch_size, input_size, requires_grad=True)
+    input_tensor = torch.randn(input_size, requires_grad=True)
     
     # Activation functions to test
     activations = {
-        "ReLU": nn.ReLU(),
-        "SiLU": nn.SiLU(),
-        "GELU": nn.GELU(),
-        "Sigmoid": nn.Sigmoid(),
-        "LeakyReLU": nn.LeakyReLU(),
-        "PReLU": nn.PReLU(),
-        "ELU": nn.ELU(),
-        "Hardshrink": nn.Hardshrink(),
-        "Softshrink": nn.Softshrink(),
-        "Tanhshrink": nn.Tanhshrink(),
-        "Hardtanh": nn.Hardtanh(),
-        "Softplus": nn.Softplus(),
-        "Softsign": nn.Softsign(),
-        "Tanh": nn.Tanh(),
-        "CELU": nn.CELU(),
-        "Swish": nn.SiLU(),  # Swish is equivalent to SiLU
-        "Mish": nn.Mish(),
-        "HardSwish": nn.Hardswish(),
-        "HardSigmoid": nn.Hardsigmoid(),
-        "GELU_s": GELU_s(sigma=sigma),
-        "SiLU_s": SiLU_s(sigma=sigma),
-        "ZiLU_Old": ZiLU_Old(sigma=sigma),
-        "ArcTan": ArcTan(sigma=sigma),
-        "ArcTan_Approx": ArcTan_Approx(sigma=sigma),
-        "ZiLU": ZiLU(sigma=sigma),
-        "ZiLU_Approx": ZiLU_Approx(sigma=sigma)
+        "ReLU": ReLU,
+        "SiLU": SiLU,
+        "GELU": GELU,
+        "Sigmoid": Sigmoid,
+        "LeakyReLU": LeakyReLU,
+        "PReLU": PReLU,
+        "ELU": ELU,
+        "Hardshrink": Hardshrink,
+        "Softshrink": Softshrink,
+        "Tanhshrink": Tanhshrink,
+        "Hardtanh": Hardtanh,
+        "Softplus": Softplus,
+        "Softsign": Softsign,
+        "Tanh": Tanh,
+        "CELU": CELU,
+        "Swish": Swish,
+        "Mish": Mish,
+        "HardSwish": HardSwish,
+        "HardSigmoid": HardSigmoid,
+        "SquarePlus": SquarePlus,
+        "ArcTan": ArcTan,
+        "ArcTan_Approx": ArcTan_Approx,
+        "ZiLU": ZiLU,
+        "ZiLU_Approx": ZiLU_Approx
     }
     
     # Determine available devices
@@ -244,6 +309,6 @@ if __name__ == "__main__":
     df = results_to_dataframe(results)
     
     # Save to CSV
-    output_file = './Output/benchmark_results.csv'
+    output_file = './benchmark_results.csv'
     df.to_csv(output_file, index=False)
    

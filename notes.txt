@@ -26,3 +26,66 @@
 - torch-a100 is able to use amp, compile, and huggingface datasets, tranformers, pytorch, etc. 
 - torch-gh200 is not able to use compile (
 
+
+GPU Information 
+- Mixed Pro6000 GPU with 16 CPU does VIT 45 s. per epoch 
+- A100 GPU with 4 CPU does VIT 88 s. per epoch 
+
+- How much can we max out the speed for this?? 
+- Pro6000 GPU with Max 80 CPU 
+
+[GPT2] 
+- With Pro6000 GPU with 80 CPU
+- Batch Size : 42 - 48
+- Num Workers : 16 
+- pin_memory = True
+- persistent_workers = True 
+- prefetch_factor = 3
+
+
+[HPC Allocation]
+1. Use A100 + 4 CPUS for ResNet + VGG experiments
+
+export OMP_NUM_THREADS=2
+export MKL_NUM_THREADS=2
+export TORCH_NUM_THREADS=2
+
+	- 2 workers
+	- True persistent workers 
+	- 2 prefetch factor 
+	- True pin memory 
+	- 128 - 256 batch size 
+
+
+
+2. Use Pro6000 + 80 CPUs for ViT experiments 
+
+export OMP_NUM_THREADS=16
+export MKL_NUM_THREADS=16
+export TORCH_NUM_THREADS=16
+
+	- 12 - 16 workers 
+	- True persistent workers
+	- 3 prefetch factor 
+	- True pin memory
+	- 256-512 batch size 
+
+3.  Use GH200 + 48 CPUs for GPT2 experiments
+
+export OMP_NUM_THREADS=10
+export MKL_NUM_THREADS=10
+export TORCH_NUM_THREADS=10
+
+	- 8 - 10 num workers 
+	- True persistent workers 
+	- 2 prefetch factor 
+	- True pin memory 
+	- 32 - 40 batch size 
+
+BATCH_SIZES = {
+    "resnet34": 128,   # All activations use 128
+    "vgg16": 128,      # All activations use 128
+    "vit": 256,        # All activations use 256
+    "gpt2": 40,        # All activations use 40
+}
+

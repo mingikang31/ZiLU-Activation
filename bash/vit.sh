@@ -1,9 +1,9 @@
 #! /bin/bash 
 #SBATCH --nodes=1 
 #SBATCH --mem=64G
-#SBATCH -p mixed --gres=gpu:pro6000:1
-#SBATCH --cpus-per-gpu=16
-#SBATCH --job-name=vit_exp
+#SBATCH -p gpu --gres=gpu:a100:1
+#SBATCH --cpus-per-task=4
+#SBATCH --job-name=gpt2_exp
 #SBATCH --time=500:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
@@ -11,17 +11,13 @@
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
 source ~/.bashrc
-conda activate torch-pro6000
+conda activate torch-a100
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
 DATASETS=("cifar10" "cifar100")
-# ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'gelu_s' 'silu_s' 'zilu_old' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-# ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
-# ACTIVATIONS=('gelu_s' 'silu_s')
-# ACTIVATIONS=('leaky_relu' 'prelu' 'elu' 'hardshrink' 'softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
-ACTIVATIONS=('hardtanh' 'squareplus')
-# ACTIVATIONS=('hardtanh' 'squareplus')
+
+ACTIVATIONS=('softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
 
 LR="1e-3"
 
@@ -57,7 +53,11 @@ for ds in "${DATASETS[@]}"; do
             --scheduler cosine \
             --device cuda \
             --seed 42 \
-            --output_dir $output_dir
+            --output_dir $output_dir \
+            --num_workers 2 \
+            --persistent_workers \
+            --prefetch_factor 2 \
+            --pin_memory
 
         # Check if experiment succeeded
         if [ $? -eq 0 ]; then

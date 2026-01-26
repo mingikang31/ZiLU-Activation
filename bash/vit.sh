@@ -15,7 +15,7 @@ conda activate torch-a100
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
-DATASETS=("cifar10" "cifar100")
+DATASETS=("cifar100")
 
 ACTIVATIONS=('softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
 
@@ -54,7 +54,7 @@ for ds in "${DATASETS[@]}"; do
             --device cuda \
             --seed 42 \
             --output_dir $output_dir \
-            --num_workers 2 \
+            --num_workers 4 \
             --persistent_workers \
             --prefetch_factor 2 \
             --pin_memory

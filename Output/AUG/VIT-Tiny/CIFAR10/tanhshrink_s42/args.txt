@@ -13,6 +13,10 @@ batch_size: 128
 num_epochs: 200
 use_amp: True
 clip_grad_norm: 1.0
+num_workers: 2
+persistent_workers: True
+prefetch_factor: 2
+pin_memory: True
 criterion: CrossEntropy
 optimizer: adamw
 momentum: 0.9

@@ -37,6 +37,7 @@ def args_parser():
 
     # Arguments for Data 
     parser.add_argument("--dataset", type=str, default="wikitext103", choices=["wikitext103"], help="Dataset to use for training and evaluation")
+    # TODO maybe change this from /mnt/research... to mnt/research....
     parser.add_argument("--data_path", type=str, default="/mnt/research/j.farias/mkang2/Datasets", help="Path to the dataset")
 
     # Training Arguments

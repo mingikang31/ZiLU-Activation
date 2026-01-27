@@ -16,7 +16,7 @@ conda activate torch-pro6000
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
 DATASETS=("wikitext103")
-ACTIVATIONS=('leaky_relu' 'prelu' 'elu' 'hardshrink' 'softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu' 'squareplus')
+ACTIVATIONS=('selu' 'squareplus')
 LR="6e-4"
 
 COUNT=0
@@ -55,8 +55,6 @@ for ds in "${DATASETS[@]}"; do
             --seed 42 \
             --output_dir $output_dir \
             --num_workers 12 \
-            --persistent_workers \
-            --prefetch_factor 3 \
             --pin_memory
 
         # Check if experiment succeeded

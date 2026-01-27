@@ -3,7 +3,7 @@
 #SBATCH --mem=64G
 #SBATCH -p gpu --gres=gpu:a100:1
 #SBATCH --cpus-per-task=4
-#SBATCH --job-name=gpt2_exp
+#SBATCH --job-name=vit_exp
 #SBATCH --time=500:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
@@ -17,7 +17,7 @@ cd /mnt/research/j.farias/mkang2/ZiLU-Activation
 
 DATASETS=("cifar100")
 
-ACTIVATIONS=('softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
+ACTIVATIONS=('hardsigmoid' 'selu')
 
 LR="1e-3"
 
@@ -55,8 +55,6 @@ for ds in "${DATASETS[@]}"; do
             --seed 42 \
             --output_dir $output_dir \
             --num_workers 4 \
-            --persistent_workers \
-            --prefetch_factor 2 \
             --pin_memory
 
         # Check if experiment succeeded

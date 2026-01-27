@@ -1,0 +1,73 @@
+_super_module_initialized: True
+_parameters: {}
+_buffers: {}
+_non_persistent_buffers_set: set()
+_backward_pre_hooks: OrderedDict()
+_backward_hooks: OrderedDict()
+_is_full_backward_hook: None
+_forward_hooks: OrderedDict()
+_forward_hooks_with_kwargs: OrderedDict()
+_forward_hooks_always_called: OrderedDict()
+_forward_pre_hooks: OrderedDict()
+_forward_pre_hooks_with_kwargs: OrderedDict()
+_state_dict_hooks: OrderedDict()
+_state_dict_pre_hooks: OrderedDict()
+_load_state_dict_pre_hooks: OrderedDict()
+_load_state_dict_post_hooks: OrderedDict()
+_modules: {'_orig_mod': GPT2(
+  (dropout): Dropout(p=0.1, inplace=False)
+  (token_embeddings): Embedding(50257, 768)
+  (position_embeddings): Embedding(1024, 768)
+  (transformer_blocks): ModuleList(
+    (0-11): 12 x TransformerBlock(
+      (attention): CausalMultiHeadAttention(
+        (w_k): Linear(in_features=768, out_features=768, bias=True)
+        (w_q): Linear(in_features=768, out_features=768, bias=True)
+        (w_v): Linear(in_features=768, out_features=768, bias=True)
+        (w_o): Linear(in_features=768, out_features=768, bias=True)
+        (attn_dropout): Dropout(p=0.1, inplace=False)
+        (resid_dropout): Dropout(p=0.1, inplace=False)
+      )
+      (mlp): MLP(
+        (fc1): Linear(in_features=768, out_features=3072, bias=True)
+        (fc2): Linear(in_features=3072, out_features=768, bias=True)
+        (activation_function): Mish(inplace=True)
+        (dropout): Dropout(p=0.1, inplace=False)
+      )
+      (layer_norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (layer_norm2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+  (layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+  (lm_head): Linear(in_features=768, out_features=50257, bias=False)
+)}
+dynamo_ctx: <torch._dynamo.eval_frame.OptimizeContext object at 0x150e286455d0>
+forward: <function Module._wrapped_call_impl at 0x150db9f28cc0>
+_torchdynamo_orig_callable: <bound method GPT2.forward of GPT2(
+  (dropout): Dropout(p=0.1, inplace=False)
+  (token_embeddings): Embedding(50257, 768)
+  (position_embeddings): Embedding(1024, 768)
+  (transformer_blocks): ModuleList(
+    (0-11): 12 x TransformerBlock(
+      (attention): CausalMultiHeadAttention(
+        (w_k): Linear(in_features=768, out_features=768, bias=True)
+        (w_q): Linear(in_features=768, out_features=768, bias=True)
+        (w_v): Linear(in_features=768, out_features=768, bias=True)
+        (w_o): Linear(in_features=768, out_features=768, bias=True)
+        (attn_dropout): Dropout(p=0.1, inplace=False)
+        (resid_dropout): Dropout(p=0.1, inplace=False)
+      )
+      (mlp): MLP(
+        (fc1): Linear(in_features=768, out_features=3072, bias=True)
+        (fc2): Linear(in_features=3072, out_features=768, bias=True)
+        (activation_function): Mish(inplace=True)
+        (dropout): Dropout(p=0.1, inplace=False)
+      )
+      (layer_norm1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      (layer_norm2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+  (layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+  (lm_head): Linear(in_features=768, out_features=50257, bias=False)
+)>
+get_compiler_config: <function _TorchDynamoContext.__call__.<locals>.get_compiler_config at 0x151049153f60>

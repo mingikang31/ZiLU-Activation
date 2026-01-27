@@ -38,7 +38,7 @@ def args_parser():
     parser.add_argument("--augment", action="store_true", help="Use data augmentation")
     parser.set_defaults(augment=False)
     parser.add_argument("--noise", type=float, default=0.0, help="Standard deviation of Gaussian noise to add to the data")
-    parser.add_argument("--data_path", type=str, default="./Data", help="Path to the dataset")
+    parser.add_argument("--data_path", type=str, default="/mnt/research/j.farias/mkang2/Datasets", help="Path to the dataset")
 
         
     # Training Arguments
@@ -92,7 +92,7 @@ def main(args):
     try: 
         torch.set_float32_matmul_precision('high')
     except:
-        print("Coult not use TensorFloat-32")
+        print("Could not use TensorFloat-32")
     
     # Dataset 
     if args.dataset == "cifar10":

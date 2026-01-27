@@ -39,7 +39,7 @@ class VGG(nn.Module):
         in_channels = self.args.img_size[0] 
         num_classes = self.args.num_classes
 
-        self.name = f"VGG {features_config} {args.activation}"
+        self.name = f"{args.model} {args.activation}"
 
         # Activation Selection
         self.activation = args.activation        

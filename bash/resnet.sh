@@ -1,22 +1,21 @@
 #! /bin/bash 
 #SBATCH --nodes=1 
 #SBATCH --mem=64G
-#SBATCH -p mixed --gres=gpu:pro6000:1
-#SBATCH --cpus-per-gpu=16
+#SBATCH -p gpu --gres=gpu:a100:1
+#SBATCH --cpus-per-task=4
 #SBATCH --job-name=resnet_exp
 #SBATCH --time=500:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=mkang2@bowdoin.edu
-
 source ~/.bashrc
-conda activate torch-pro6000
+conda activate torch-a100
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
-DATASETS=("cifar10" "cifar100")
-ACTIVATIONS=('hardtanh' 'squareplus')
+DATASETS=("cifar100")
+ACTIVATIONS=('zilu_approx' 'hardsigmoid' 'mish')
 # ACTIVATIONS=('leaky_relu' 'prelu' 'elu' 'hardshrink' 'softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
 # # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
 # # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'zilu' 'zilu_approx')
@@ -32,7 +31,7 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir="./Output/AUG/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/AUG/ResNet34-2/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
@@ -55,7 +54,9 @@ for ds in "${DATASETS[@]}"; do
             --scheduler cosine \
             --device cuda \
             --seed 42 \
-            --output_dir $output_dir
+            --output_dir $output_dir \
+            --num_workers 4 \
+            --pin_memory
 
         # Check if experiment succeeded
         if [ $? -eq 0 ]; then

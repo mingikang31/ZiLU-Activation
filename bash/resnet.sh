@@ -15,7 +15,7 @@ conda activate torch-a100
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
 DATASETS=("cifar100")
-ACTIVATIONS=('zilu_approx' 'hardsigmoid' 'mish')
+ACTIVATIONS=('hardsigmoid')
 # ACTIVATIONS=('leaky_relu' 'prelu' 'elu' 'hardshrink' 'softshrink' 'tanhshrink' 'hardtanh' 'softplus' 'softsign' 'tanh' 'celu' 'mish' 'hardswish' 'hardsigmoid' 'selu')
 # # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'arctan' 'arctan_approx' 'zilu' 'zilu_approx')
 # # ACTIVATIONS=('relu' 'gelu' 'silu' 'sigmoid' 'zilu' 'zilu_approx')
@@ -31,7 +31,7 @@ for ds in "${DATASETS[@]}"; do
 
         COUNT=$((COUNT + 1)) 
 
-        output_dir="./Output/AUG/ResNet34-2/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/AUG/ResNet34-3/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
         echo "[$COUNT] Dataset=$ds | Activation=$act"
 
@@ -44,7 +44,6 @@ for ds in "${DATASETS[@]}"; do
             --data_path ./Data \
             --batch_size 128 \
             --num_epochs 200 \
-            --use_amp \
             --compile \
             --clip_grad_norm 1.0 \
             --criterion CrossEntropy \

@@ -89,3 +89,10 @@ BATCH_SIZES = {
     "gpt2": 40,        # All activations use 40
 }
 
+
+[ImageNet-1K Experiments]
+python vision_main.py --device cuda --output_dir ./Data/IMAGENET_TEST --use_amp --model resnet50 --compile --pin_memory --dataset imagenet1k --num_workers 2
+
+
+- Need to use DropPath (either from timm library or own implementation) for ViT, Swin, Transformer stuff
+

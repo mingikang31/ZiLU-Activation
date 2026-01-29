@@ -1,5 +1,6 @@
 '''Training & Evaluation Module for Convolutional Neural Networks'''
 
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -423,7 +424,7 @@ def Train_Eval_ImageNet(args,
         set_seed(args.seed)
 
     # Loss Criterion
-    train_criterion = SoftTargetCrossEntropy()  # Using Timm's SoftTargetCrossEntropy for ImageNet
+    train_criterion = SoftTargetCrossEntropy() if mixup_fn is not None else nn.CrossEntropyLoss()  # Using Timm's SoftTargetCrossEntropy for ImageNet
     eval_criterion = nn.CrossEntropyLoss()
 
     # Optimizer 
@@ -593,6 +594,29 @@ def Train_Eval_ImageNet(args,
 
     epoch_results.append(f"\nAverage Epoch Time: {sum(epoch_times) / len(epoch_times):.4f}s")
     epoch_results.append(f"Max Accuracy: {max_accuracy:.4f}% at Epoch {max_epoch}")
+
+    # Saving model 
+    save_path = os.path.join(args.output_dir, f"final_model.pth")
+    save_model(model, args, optimizer, scheduler, epoch, test_top1_5[0], max_accuracy, save_path)
     
     return epoch_results
-    
+
+def save_model(model, args, optimizer, scheduler, epoch, last_accuracy, best_accuracy, checkpoint_path):
+    torch.save({
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'scheduler_state_dict': scheduler.state_dict(),
+        'last_accuracy': last_accuracy,
+        'best_accuracy': best_accuracy,
+        'args': args
+    }, checkpoint_path)
+    print(f"Model saved to {checkpoint_path}")
+
+def load_model(model, checkpoint_path, device='cuda'):
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    print(f"Model loaded from {checkpoint_path}")
+
+    print(f"Loaded model from epoch {checkpoint['epoch']} with best accuracy {checkpoint['best_accuracy']:.4f}%")
+    return model

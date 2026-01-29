@@ -116,6 +116,7 @@ def main(args):
         dataset = ImageNet1K(args)
         args.num_classes = dataset.num_classes 
         args.img_size = dataset.img_size
+        args.batch_size = 1024 # Use larger batch size for ImageNet1K
         args.augment = True # Always use augmentation/mixup for ImageNet1K
     else:
         raise ValueError("Dataset not supported")

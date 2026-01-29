@@ -42,7 +42,7 @@ def args_parser():
     parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'resnet50', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-large'], help='Model architecture')
 
     # Arguments for Data 
-    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100"], help="Dataset to use for training and evaluation")
+    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100", "imagenet1k"], help="Dataset to use for training and evaluation")
     parser.add_argument("--resize", type=int, default=None, help="Resize images to 224x224")
     parser.add_argument("--augment", action="store_true", help="Use data augmentation")
     parser.set_defaults(augment=False)
@@ -196,15 +196,6 @@ def main(args):
         if args.output_dir:
             Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
-        # Compile Model 
-        if args.compile: 
-            model = torch.compile(
-                model, 
-                mode=args.compile_mode, 
-                fullgraph=False, 
-                dynamic=False) 
-            print("compiled success!")
-        
         # Training Module
         if args.dataset in ["cifar10", "cifar100"]:
             train_eval_results = Train_Eval(args, 

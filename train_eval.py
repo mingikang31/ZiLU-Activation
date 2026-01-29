@@ -91,6 +91,15 @@ def Train_Eval(args,
     except Exception as e:
         print(f"Could not calculate GFLOPs with PyTorch Profiler: {e}")
     
+    # Compile Model 
+    if args.compile: 
+        model = torch.compile(
+            model, 
+            mode=args.compile_mode, 
+            fullgraph=False, 
+            dynamic=False) 
+        print("compiled success!")
+        
     # Training Loop
     epoch_times = [] # Average Epoch Time 
     max_accuracy = 0.0 
@@ -233,6 +242,7 @@ def Train_Eval_GPT(args,
     
     ## [GFLOPS] Computation using PyTorch Profiler ##
     try:
+        model.eval()
         batch = next(iter(train_loader))
 
         tokens = batch["input_ids"].to(device)
@@ -262,7 +272,16 @@ def Train_Eval_GPT(args,
 
     except Exception as e:
         print(f"Could not calculate GFLOPs with PyTorch Profiler: {e}")
-
+        
+    # Compile Model 
+    if args.compile: 
+        model = torch.compile(
+            model, 
+            mode=args.compile_mode, 
+            fullgraph=False, 
+            dynamic=False) 
+        print("compiled success!")
+        
     # Training Loop 
     epoch_times = [] # Average Epoch Time
     min_perplexity = float('inf')
@@ -404,7 +423,8 @@ def Train_Eval_ImageNet(args,
         set_seed(args.seed)
 
     # Loss Criterion
-    criterion = SoftTargetCrossEntropy()  # Using Timm's SoftTargetCrossEntropy for ImageNet
+    train_criterion = SoftTargetCrossEntropy()  # Using Timm's SoftTargetCrossEntropy for ImageNet
+    eval_criterion = nn.CrossEntropyLoss()
 
     # Optimizer 
     optimizer = optim.AdamW(
@@ -428,14 +448,15 @@ def Train_Eval_ImageNet(args,
 
     args.num_epochs = 300
     args.clip_grad_norm = 5.0
-    args.use_amp = True 
+    # args.use_amp = True 
     
 
     # Device 
     device = args.device 
     model.to(device) 
-    criterion.to(device)
-
+    train_criterion.to(device)
+    eval_criterion.to(device) 
+    
     scaler = GradScaler() if args.use_amp else None
 
     epoch_results = [] 
@@ -444,8 +465,7 @@ def Train_Eval_ImageNet(args,
     try:
         model.eval()
         batch = next(iter(train_loader))
-        batch['pixel_values'].to(device)
-        input_tensor = batch['pixel_values']
+        input_tensor = batch['pixel_values'].to(device)
 
         # Profile a single forward pass
         with torch.profiler.profile(
@@ -466,6 +486,15 @@ def Train_Eval_ImageNet(args,
     except Exception as e:
         print(f"Could not calculate GFLOPs with PyTorch Profiler: {e}")
 
+    # Compile Model 
+    if args.compile: 
+        model = torch.compile(
+            model, 
+            mode=args.compile_mode, 
+            fullgraph=False, 
+            dynamic=False) 
+        print("compiled success!")
+        
     # Training Loop 
     epoch_times = [] # Average Epoch Time 
     max_accuracy = 0.0 
@@ -480,7 +509,8 @@ def Train_Eval_ImageNet(args,
         start_time = time.time() 
 
         train_top1_5 = [0, 0]
-        for batch in train_loader: 
+        for i, batch in enumerate(train_loader): 
+            
             images = batch['pixel_values'].to(device)
             labels = batch['labels'].to(device)
 
@@ -492,8 +522,8 @@ def Train_Eval_ImageNet(args,
             # use mixed precision training
             if args.use_amp:
                 with autocast(device_type=args.device):
-                    outputs = model(images)
-                    loss = criterion(outputs, labels)
+                    outputs = model(images)                    
+                    loss = train_criterion(outputs, labels)
                 scaler.scale(loss).backward()
                 if args.clip_grad_norm:
                     scaler.unscale_(optimizer) # Unscale gradients before clipping
@@ -502,7 +532,7 @@ def Train_Eval_ImageNet(args,
                 scaler.update()
             else:    
                 outputs = model(images)
-                loss = criterion(outputs, labels)
+                loss = train_criterion(outputs, labels)
                 loss.backward()
                 if args.clip_grad_norm:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
@@ -515,6 +545,7 @@ def Train_Eval_ImageNet(args,
                 train_top1_5[1] += top5.item()
             train_running_loss += loss.item()
 
+
         if mixup_fn is None: 
             train_top1_5[0] /= len(train_loader)
             train_top1_5[1] /= len(train_loader)
@@ -523,7 +554,8 @@ def Train_Eval_ImageNet(args,
         model.eval() 
         test_top1_5 = [0, 0]
         with torch.no_grad():
-            for batch in test_loader: 
+            for i, batch in enumerate(test_loader):
+                    
                 images = batch['pixel_values'].to(device)
                 labels = batch['labels'].to(device)
 
@@ -532,7 +564,8 @@ def Train_Eval_ImageNet(args,
                         outputs = model(images)
                 else: 
                     outputs = model(images)
-                loss = criterion(outputs, labels)
+                
+                loss = eval_criterion(outputs, labels)
                 test_running_loss += loss.item()
 
                 top1, top5 = accuracy(outputs, labels, topk=(1, 5))
@@ -556,11 +589,7 @@ def Train_Eval_ImageNet(args,
             max_epoch = epoch + 1
 
         # Learning Rate Scheduler Step
-        if scheduler: 
-            if isinstance(scheduler, optim.lr_scheduler.ReduceLROnPlateau):
-                scheduler.step(test_top1_5[0])
-            else:
-                scheduler.step()
+        scheduler.step(epoch + 1)
 
     epoch_results.append(f"\nAverage Epoch Time: {sum(epoch_times) / len(epoch_times):.4f}s")
     epoch_results.append(f"Max Accuracy: {max_accuracy:.4f}% at Epoch {max_epoch}")

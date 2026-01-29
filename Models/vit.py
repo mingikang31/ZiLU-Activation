@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torchsummary import summary 
 import numpy as np
 
+
 # Activation Functions 
 from Models.activation import (GELU_s, SiLU_s, ZiLU_Old, ArcTan,
                                ArcTan_Approx, ZiLU, ZiLU_Approx, SquarePlus)
@@ -250,3 +251,109 @@ class TransformerEncoder(nn.Module):
         mlp_output = self.mlp(norm_x)
         x = x + self.dropout2(mlp_output)  
         return x
+
+"""Transformer Encoder with DropPath will be used for ImageNet1K ViT Experiments"""
+class TransformerEncoder_DropPath(nn.Module): 
+    def __init__(self, args, d_hidden, d_mlp, num_heads, dropout, attention_dropout):
+        super(TransformerEncoder_DropPath, self).__init__()
+        self.args = args 
+
+        self.d_hidden = d_hidden 
+        self.d_mlp = d_mlp
+        self.num_heads = num_heads
+        self.dropout = dropout
+        self.attention_dropout = attention_dropout
+
+        self.attention = MultiHeadAttention(d_hidden, num_heads, attention_dropout)
+
+        self.norm1 = nn.LayerNorm(d_hidden)
+        self.norm2 = nn.LayerNorm(d_hidden)
+        self.drop_path = DropPath(dropout)
+        self.drop_path2 = DropPath(dropout)
+
+        # Activation Selection
+        self.activation = args.activation
+
+        # Activation function mapping
+        self.activation_map = {
+            "relu": lambda: nn.ReLU(inplace=args.inplace), 
+            "silu": lambda: nn.SiLU(inplace=args.inplace), 
+            "gelu": lambda: nn.GELU(), 
+            "sigmoid": lambda: nn.Sigmoid(), 
+
+            # Previous Activation Generation
+            "gelu_s": lambda: GELU_s(sigma=args.sigma, inplace=args.inplace), 
+            "silu_s": lambda: SiLU_s(sigma=args.sigma, inplace=args.inplace), 
+            "zilu_old": lambda: ZiLU_Old(sigma=args.sigma, inplace=args.inplace), 
+
+            # Current Activation Generation 
+            "arctan": lambda: ArcTan(sigma=args.sigma), 
+            "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
+            "zilu": lambda: ZiLU(sigma=args.sigma), 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma), 
+            "squareplus": lambda: SquarePlus(beta=4),
+
+            # Other Activations
+            "leaky_relu": lambda: nn.LeakyReLU(inplace=args.inplace), 
+            "prelu": lambda: nn.PReLU(), 
+            "elu": lambda: nn.ELU(inplace=args.inplace), 
+            "hardshrink": lambda: nn.Hardshrink(), 
+            "softshrink": lambda: nn.Softshrink(), 
+            "tanhshrink": lambda: nn.Tanhshrink(), 
+            "softplus": lambda: nn.Softplus(),
+            "softsign": lambda: nn.Softsign(), 
+            "tanh": lambda: nn.Tanh(),
+            "celu": lambda: nn.CELU(inplace=args.inplace),
+            "mish": lambda: nn.Mish(inplace=args.inplace), 
+            "hardswish": lambda: nn.Hardswish(inplace=args.inplace), 
+            "hardsigmoid": lambda: nn.Hardsigmoid(inplace=args.inplace),
+            "selu": lambda: nn.SELU(inplace=args.inplace),
+            "hardtanh": lambda: nn.Hardtanh(inplace=args.inplace)
+        }
+
+        if self.activation not in self.activation_map:
+            raise ValueError(f"Unsupported activation function: {self.activation}")
+            
+
+        # Multilayer Perceptron 
+        self.mlp = nn.Sequential(
+            nn.Linear(d_hidden, d_mlp),
+            self.activation_map[self.activation](), 
+            nn.Dropout(dropout),
+            nn.Linear(d_mlp, d_hidden)
+        )
+        
+    def forward(self, x): 
+        # Pre-Norm Multi-Head Attention 
+        norm_x = self.norm1(x) 
+        attn_output = self.attention(norm_x)  
+        x = x + self.drop_path(attn_output)
+        
+        # Post-Norm Feed Forward Network
+        norm_x = self.norm2(x)  
+        mlp_output = self.mlp(norm_x)
+        x = x + self.drop_path2(mlp_output)  
+        return x
+
+    
+"""Also can use timm's DropPath implementation"""
+# from timm.models.layers import DropPath
+class DropPath(nn.Module):
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
+    """
+    def __init__(self, drop_prob: float = 0.0):
+        super(DropPath, self).__init__()
+        self.drop_prob = drop_prob
+
+    def forward(self, x):
+        if self.drop_prob == 0. or not self.training:
+            return x
+
+        keep_prob = 1 - self.drop_prob
+        shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+        random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
+        random_tensor.floor_()  # binarize
+        output = x.div(keep_prob) * random_tensor
+        return output
+        
+    

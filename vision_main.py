@@ -5,8 +5,8 @@ import os
 import torch 
 
 # Datasets and Eval 
-from train_eval import Train_Eval
-from dataset import CIFAR10, CIFAR100
+from train_eval import Train_Eval, Train_Eval_ImageNet
+from dataset import CIFAR10, CIFAR100, ImageNet1K, mixup_fn
 
 # Models 
 from Models.vgg import VGG
@@ -15,6 +15,15 @@ from Models.vit import ViT
 
 # Utils 
 from utils import write_to_file, set_seed
+
+"""
+Dropout for ViT/Swin Transformer:
+    - Swin-T = 0.2
+    - Swin-S = 0.3
+    - Swin-B = 0.5
+    
+"""
+
 
 def args_parser():
     parser = argparse.ArgumentParser(description="Activation Function Experiments")
@@ -103,6 +112,11 @@ def main(args):
         dataset = CIFAR100(args)
         args.num_classes = dataset.num_classes 
         args.img_size = dataset.img_size 
+    elif args.dataset == "imagenet1k":
+        dataset = ImageNet1K(args)
+        args.num_classes = dataset.num_classes 
+        args.img_size = dataset.img_size
+        args.augment = True # Always use augmentation/mixup for ImageNet1K
     else:
         raise ValueError("Dataset not supported")
 
@@ -190,17 +204,24 @@ def main(args):
                 fullgraph=False, 
                 dynamic=False) 
             print("compiled success!")
-            
-        # Set the seed for reproducibility
-        if args.seed != 0:
-            set_seed(args.seed)
         
         # Training Module
-        train_eval_results = Train_Eval(args, 
-                                    model, 
-                                    dataset.train_loader, 
-                                    dataset.test_loader
-                                    )
+        if args.dataset in ["cifar10", "cifar100"]:
+            train_eval_results = Train_Eval(args, 
+                                        model, 
+                                        dataset.train_loader, 
+                                        dataset.test_loader
+                                        )
+        elif args.dataset == "imagenet1k":
+            train_eval_results = Train_Eval_ImageNet(
+                                        args, 
+                                        model, 
+                                        dataset.train_loader, 
+                                        dataset.test_loader,
+                                        mixup_fn=mixup_fn
+                                        )
+
+        
         
         # Store Results
         write_to_file(os.path.join(args.output_dir, "args.txt"), args)

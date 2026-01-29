@@ -13,6 +13,24 @@ from transformers import GPT2Tokenizer
 
 # Timm 
 from timm.data import create_transform 
+from timm.data.mixup import Mixup
+
+"""d
+Swin Transformer Config for Hyperparameters
+https://github.com/microsoft/Swin-Transformer/blob/main/config.py
+"""
+# Mixup/CutMix setup
+mixup_fn = Mixup(
+    mixup_alpha=0.8,      # Mixup alpha
+    cutmix_alpha=1.0,     # CutMix alpha
+    cutmix_minmax=None,
+    prob=1.0,             # Probability of applying mixup or cutmix
+    switch_prob=0.5,      # Probability of switching between mixup and cutmix
+    mode='batch',
+    label_smoothing=0.1,  # Label smoothing
+    num_classes=1000      # ImageNet classes
+)
+
 
 '''ImageNet1K Dataset Class'''
 class ImageNet1K:
@@ -92,7 +110,7 @@ class ImageNet1K:
         pixel_values = [self.train_transform_func(img) for img in images]
         return {
             "pixel_values": pixel_values, 
-            "label": examples['label']
+            "labels": examples['label']
         }
         
 
@@ -103,7 +121,7 @@ class ImageNet1K:
         pixel_values = [self.val_transform_func(img) for img in images]
         return {
             "pixel_values": pixel_values, 
-            "label": examples['label']
+            "labels": examples['label']
         }
 
 '''Wikitext-103 Dataset Class'''

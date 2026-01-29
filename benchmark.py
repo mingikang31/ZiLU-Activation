@@ -82,9 +82,11 @@ def ZiLU(x):
 def ZiLU_Approx(x):
     return x * ((0.5 + torch.clamp(x, min=0)) / (1.0 + torch.abs(x)))
 
+def SeLU(x):
+  return F.selu(x)
 
 """
-Time benchmarking for various activation functions on different devices (forward and backward passes). 
+Time benchmarking for various activation functions on different devices (forward and backward passes).
 """
 # ...existing code...
 
@@ -94,85 +96,85 @@ def benchmark_activation(activation_fn, input_tensor, device, num_warmup=10, num
     """
     input_tensor = input_tensor.to(device)
 
-    if compile: 
+    if compile:
         activation_fn = torch.compile(activation_fn)
-        
+
     # Warmup
     for _ in range(num_warmup):
         test_input = input_tensor.clone().detach().requires_grad_(True)
         output = activation_fn(test_input)
         if test_input.requires_grad:
             output.sum().backward()
-    
+
     # Synchronize device
     if device == 'cuda':
         torch.cuda.synchronize()
     elif device == 'mps':
         torch.mps.synchronize()
-    
+
     # Benchmark forward pass
     forward_times = []
     for _ in range(num_iterations):
         test_input = input_tensor.clone().detach().requires_grad_(True)
-        
+
         if device == 'cuda':
             torch.cuda.synchronize()
         elif device == 'mps':
             torch.mps.synchronize()
-            
+
         start = time.perf_counter()
         output = activation_fn(test_input)
-        
+
         if device == 'cuda':
             torch.cuda.synchronize()
         elif device == 'mps':
             torch.mps.synchronize()
-        
+
         end = time.perf_counter()
         forward_times.append((end - start) * 1000)
-        
+
         # Keep output alive to prevent optimization
         del output
-    
+
     # Benchmark backward pass
     backward_times = []
     for _ in range(num_iterations):
         test_input = input_tensor.clone().detach().requires_grad_(True)
         output = activation_fn(test_input)
         loss = output.sum()
-        
+
         if device == 'cuda':
             torch.cuda.synchronize()
         elif device == 'mps':
             torch.mps.synchronize()
-            
+
         start = time.perf_counter()
         loss.backward()
-        
+
         if device == 'cuda':
             torch.cuda.synchronize()
         elif device == 'mps':
             torch.mps.synchronize()
-        
+
         end = time.perf_counter()
         backward_times.append((end - start) * 1000)
-    
+
     return {
         'forward_mean': sum(forward_times) / len(forward_times),
         'forward_std': torch.tensor(forward_times).std().item(),
         'backward_mean': sum(backward_times) / len(backward_times),
         'backward_std': torch.tensor(backward_times).std().item()
     }
-    
+
 def run_benchmarks():
     """Run benchmarks for all activation functions on all available devices."""
-    
+
     # Test configuration
     input_size = 1000000  # 1 million elements
-    
+
     # Create test input
     input_tensor = torch.randn(input_size, requires_grad=True)
-    
+
     # Activation functions to test
     activations = {
         "ReLU": ReLU,
@@ -198,63 +200,64 @@ def run_benchmarks():
         "ArcTan": ArcTan,
         "ArcTan_Approx": ArcTan_Approx,
         "ZiLU": ZiLU,
-        "ZiLU_Approx": ZiLU_Approx
+        "ZiLU_Approx": ZiLU_Approx, 
+        "SeLU": SeLU
     }
-    
+
     # Determine available devices
     devices = ['cpu']
     if torch.cuda.is_available():
         devices.append('cuda')
     if torch.backends.mps.is_available():
         devices.append('mps')
-    
+
     print(f"Available devices: {devices}")
     print(f"Input shape: {input_tensor.shape}\n")
-    
+
     # Run benchmarks
     results = {}
     for device in devices:
         print(f"\n{'='*60}")
         print(f"Device: {device.upper()}")
         print(f"{'='*60}")
-        
+
         results[device] = {}
-        
+
         for name, activation_fn in activations.items():
             print(f"\nBenchmarking {name}...")
-            
+
             try:
                 # Create fresh input for each test
                 test_input = input_tensor.clone().detach().requires_grad_(True)
-                
+
                 # Run benchmark
                 timing = benchmark_activation(
-                    activation_fn, 
-                    test_input, 
+                    activation_fn,
+                    test_input,
                     device,
                     num_warmup=10,
                     num_iterations=100
                 )
-                
+
                 results[device][name] = timing
-                
+
                 print(f"  Forward:  {timing['forward_mean']:.4f} ± {timing['forward_std']:.4f} ms")
                 print(f"  Backward: {timing['backward_mean']:.4f} ± {timing['backward_std']:.4f} ms")
-                
+
             except Exception as e:
                 print(f"  Error: {e}")
                 results[device][name] = None
-    
+
     # Print summary table
     print(f"\n{'='*60}")
     print("SUMMARY TABLE")
     print(f"{'='*60}")
-    
+
     for device in devices:
         print(f"\n{device.upper()}:")
         print(f"{'Activation':<20} {'Forward (ms)':<20} {'Backward (ms)':<20}")
         print("-" * 60)
-        
+
         for name in activations.keys():
             if results[device].get(name):
                 timing = results[device][name]
@@ -263,21 +266,21 @@ def run_benchmarks():
                 print(f"{name:<20} {fwd:<20} {bwd:<20}")
             else:
                 print(f"{name:<20} {'N/A':<20} {'N/A':<20}")
-    
+
     return results
 
 def results_to_dataframe(results):
     """
     Convert benchmark results to a pandas DataFrame.
-    
+
     Args:
         results: Nested dict with structure {device: {activation: {metric: value}}}
-    
+
     Returns:
         pandas DataFrame with columns: Device, Activation, Forward_Mean, Forward_Std, Backward_Mean, Backward_Std
     """
     data = []
-    
+
     for device, activations in results.items():
         for activation_name, timing in activations.items():
             if timing is not None:
@@ -298,17 +301,16 @@ def results_to_dataframe(results):
                     'Backward_Mean (ms)': None,
                     'Backward_Std (ms)': None
                 })
-    
+
     df = pd.DataFrame(data)
     return df
 
 if __name__ == "__main__":
     results = run_benchmarks()
-    
+
     # Convert to DataFrame
     df = results_to_dataframe(results)
-    
+
     # Save to CSV
-    output_file = './benchmark_results.csv'
+    output_file = './Output/benchmark_results.csv'
     df.to_csv(output_file, index=False)
-   

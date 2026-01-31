@@ -15,6 +15,8 @@ conda activate torch-rtx3080
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
+ulimit -s unlimited
+
 # --- Safe Port Generation --- # 
 export MASTER_PORT=$(expr 10000 + $(echo -n $SLURM_JOBID | tail -c 4))
 echo "Using Port: $MASTER_PORT"
@@ -32,5 +34,5 @@ torchrun --nproc_per_node=3 \
         --num_workers 1 \
         --pin_memory \
         --ddp \
-        --ddp_batch_size 128
+        --ddp_batch_size 32
 

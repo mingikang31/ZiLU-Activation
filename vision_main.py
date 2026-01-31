@@ -41,7 +41,7 @@ def args_parser():
     parser.add_argument('--inplace', action='store_true', help='Use inplace activation functions')
     parser.set_defaults(inplace=False)
 
-    parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'resnet50', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-large'], help='Model architecture')
+    parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'resnet50', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-base'], help='Model architecture')
 
     # Arguments for Data 
     parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100", "imagenet1k"], help="Dataset to use for training and evaluation")
@@ -180,7 +180,7 @@ def main(args):
         args.attention_dropout = 0.1
         model = ViT(args) 
 
-    elif args.model == "vit-large": 
+    elif args.model == "vit-base": 
         args.patch_size = 16 
         args.d_hidden = 768
         args.d_mlp = 3072 
@@ -190,13 +190,9 @@ def main(args):
         args.attention_dropout = 0.1
         model = ViT(args)
 
-    model.to(args.device)
+    model.to(args.device, memory_format=torch.channels_last) # For UserWarning: Grad strides do not match view strides
     print(f"Model: {model.name}")
-
-    # Distributed Data Parallel
-    if args.ddp and dist.is_available() and dist.is_initialized():
-        model = DDP(model, device_ids=[local_rank])
-
+    
     # Parameters
     total_params, trainable_params = model.parameter_count()
     print(f"Total Parameters: {total_params}")
@@ -204,6 +200,9 @@ def main(args):
     args.total_params = total_params
     args.trainable_params = trainable_params
 
+    # Distributed Data Parallel
+    if args.ddp and dist.is_available() and dist.is_initialized():
+        model = DDP(model, device_ids=[local_rank])
     
     if args.test_only:
         ex = torch.Tensor(3, args.img_size[0], args.img_size[1], args.img_size[2]).to(args.device)

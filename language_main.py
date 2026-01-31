@@ -80,6 +80,11 @@ def args_parser():
     parser.add_argument("--test_only", action="store_true", help="Only test the model")
     parser.set_defaults(test_only=False)
 
+    # Distributed Data Parallel (DDP) 
+    parser.add_argument("--ddp", action="store_true", help="Use Distributed Data Parallel (DDP) for training")
+    parser.set_defaults(ddp=False)
+    parser.add_argument("--ddp_batch_size", type=int, default=32, help="Batch size per GPU for DDP training")
+
     return parser 
 
 def main(args):
@@ -128,19 +133,6 @@ def main(args):
         # Check if the output directory exists, if not create it
         if args.output_dir: 
             Path(args.output_dir).mkdir(parents=True, exist_ok=True) 
-
-        # Compile Model 
-        if args.compile: 
-            model = torch.compile(
-                model, 
-                mode=args.compile_mode, 
-                fullgraph=False, 
-                dynamic=False) 
-            print("compiled success!")
-            
-        # Set the seed for reproducibility
-        if args.seed != 0: 
-            set_seed(args.seed)
 
         # Training Module
         train_eval_results = Train_Eval_GPT(

@@ -15,9 +15,36 @@ from transformers import get_linear_schedule_with_warmup
 from timm.loss import SoftTargetCrossEntropy 
 from timm.scheduler.cosine_lr import CosineLRScheduler
 
+# Distributed Data Parallel 
+import torch.distributed as dist
 
+""" Setup distributed training environment """
+def setup_distributed():
+    # Torchrun sets the following environment variables
+    if "RANK" in os.environ:
+        dist.init_process_group(backend="nccl")
+        local_rank = int(os.environ["LOCAL_RANK"])
+        torch.cuda.set_device(local_rank)
+        return local_rank 
+    else: 
+        print("Not using Distributed Data Parallel Mode")
+        return 0 
+
+""" Cleanup distributed training environment """
+def cleanup_distributed():
+    if dist.is_initialized():
+        dist.destroy_process_group()
+
+""" Reducing tensor across all processes """
+def reduce_tensor(tensor):
+    rt = tensor.clone() 
+    dist.all_reduce(rt, op=dist.ReduceOp.SUM)
+    rt /= dist.get_world_size()
+    return rt 
+
+
+"""Computes the top-1 and top-5 accuracy of the model."""
 def accuracy(output, target, topk=(1,)):
-    """Computes the top-1 and top-5 accuracy of the model."""
     maxk = min(max(topk), output.size()[1])
     batch_size = target.size(0)
     _, pred = output.topk(maxk, 1, True, True)
@@ -203,6 +230,8 @@ def Train_Eval_GPT(args,
                    test_loader, 
                    val_loader
                    ):
+    
+    # Set Seed
     if args.seed != 0:
         set_seed(args.seed)
 
@@ -417,7 +446,9 @@ def Train_Eval_ImageNet(args,
                         model: nn.Module, 
                         train_loader, 
                         test_loader, 
-                        mixup_fn=None
+                        train_sampler,
+                        mixup_fn=None, 
+                        rank=0
                         ):
 
     if args.seed != 0:
@@ -489,11 +520,11 @@ def Train_Eval_ImageNet(args,
 
     # Compile Model 
     if args.compile: 
-        model = torch.compile(
-            model, 
+        model = torch.compile( 
+            model=model, 
             mode=args.compile_mode, 
             fullgraph=False, 
-            dynamic=False) 
+            dynamic=False)
         print("compiled success!")
         
     # Training Loop 
@@ -502,29 +533,34 @@ def Train_Eval_ImageNet(args,
     max_epoch = 0 
 
     for epoch in range(args.num_epochs):
+        if train_sampler is not None and hasattr(train_sampler, 'set_epoch'):
+            train_sampler.set_epoch(epoch)
+        
         # Model Training 
         model.train() 
         train_running_loss = 0.0
         test_running_loss = 0.0
-
         start_time = time.time() 
-
         train_top1_5 = [0, 0]
+        
         for i, batch in enumerate(train_loader): 
-            
-            images = batch['pixel_values'].to(device)
-            labels = batch['labels'].to(device)
-
+            if isinstance(batch, dict):
+                images = batch['pixel_values'].to(device, non_blocking=True)
+                labels = batch['labels'].to(device, non_blocking=True)
+            else: 
+                images, labels = batch[0].to(device, non_blocking=True), batch[1].to(device, non_blocking=True)
             # Apply Mixup if available
             if mixup_fn is not None:
                 images, labels = mixup_fn(images, labels)
 
             optimizer.zero_grad() 
+            
             # use mixed precision training
             if args.use_amp:
                 with autocast(device_type=args.device):
                     outputs = model(images)                    
                     loss = train_criterion(outputs, labels)
+                    
                 scaler.scale(loss).backward()
                 if args.clip_grad_norm:
                     scaler.unscale_(optimizer) # Unscale gradients before clipping
@@ -556,9 +592,12 @@ def Train_Eval_ImageNet(args,
         test_top1_5 = [0, 0]
         with torch.no_grad():
             for i, batch in enumerate(test_loader):
-                    
-                images = batch['pixel_values'].to(device)
-                labels = batch['labels'].to(device)
+
+                if isinstance(batch, dict):
+                    images = batch['pixel_values'].to(device, non_blocking=True)
+                    labels = batch['labels'].to(device, non_blocking=True)
+                else: 
+                    images, labels = batch[0].to(device, non_blocking=True), batch[1].to(device, non_blocking=True)
 
                 if args.use_amp:
                     with autocast(device_type=args.device):
@@ -572,18 +611,28 @@ def Train_Eval_ImageNet(args,
                 top1, top5 = accuracy(outputs, labels, topk=(1, 5))
                 test_top1_5[0] += top1.item()
                 test_top1_5[1] += top5.item()
-                
-        test_top1_5[0] /= len(test_loader)
-        test_top1_5[1] /= len(test_loader)
+
+        val_metrics = torch.tensor([test_top1_5[0], test_top1_5[1], test_running_loss], device=device)
+
+        if dist.is_initialized():
+            val_metrics = reduce_tensor(val_metrics)
+
+        test_top1_5 = [val_metrics[0].item() / len(test_loader), val_metrics[1].item() / len(test_loader)]
+        test_running_loss = val_metrics[2].item() / len(test_loader)
+    
 
         # Single Epoch Duration
         epoch_time = time.time() - start_time
         epoch_times.append(epoch_time)
 
         # Save Epoch Results
-        epoch_results.append(f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {train_running_loss/len(train_loader):.8f} Accuracy: Top1: {train_top1_5[0]:.4f}%, Top5: {train_top1_5[1]:.4f}% | [Test] Loss: {test_running_loss/len(test_loader):.8f} Accuracy: Top1: {test_top1_5[0]:.4f}%, Top5: {test_top1_5[1]:.4f}%")
-        print(epoch_results[-1])
+        result_str = f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {train_running_loss/len(train_loader):.8f} Accuracy: Top1: {train_top1_5[0]:.4f}%, Top5: {train_top1_5[1]:.4f}% | [Test] Loss: {test_running_loss:.8f} Accuracy: Top1: {test_top1_5[0]:.4f}%, Top5: {test_top1_5[1]:.4f}%"
+        epoch_results.append(result_str)
 
+        # Print only for rank 0
+        if rank == 0:
+            print(result_str)
+        
         # Max Accuracy Check
         if test_top1_5[0] > max_accuracy:
             max_accuracy = test_top1_5[0]
@@ -592,12 +641,16 @@ def Train_Eval_ImageNet(args,
         # Learning Rate Scheduler Step
         scheduler.step(epoch + 1)
 
-    epoch_results.append(f"\nAverage Epoch Time: {sum(epoch_times) / len(epoch_times):.4f}s")
-    epoch_results.append(f"Max Accuracy: {max_accuracy:.4f}% at Epoch {max_epoch}")
+    if rank == 0: 
 
-    # Saving model 
-    save_path = os.path.join(args.output_dir, f"final_model.pth")
-    save_model(model, args, optimizer, scheduler, epoch, test_top1_5[0], max_accuracy, save_path)
+        epoch_results.append(f"\nAverage Epoch Time: {sum(epoch_times) / len(epoch_times):.4f}s")
+        epoch_results.append(f"Max Accuracy: {max_accuracy:.4f}% at Epoch {max_epoch}")
+
+        # Saving model 
+        save_path = os.path.join(args.output_dir, f"final_model.pth")
+        model_to_save = model.module if hasattr(model, 'module') else model
+
+        save_model(model_to_save, args, optimizer, scheduler, epoch, test_top1_5[0], max_accuracy, save_path)
     
     return epoch_results
 

@@ -15,6 +15,9 @@ from transformers import GPT2Tokenizer
 from timm.data import create_transform 
 from timm.data.mixup import Mixup
 
+# Distributed Data Parallel 
+from torch.utils.data.distributed import DistributedSampler
+
 """d
 Swin Transformer Config for Hyperparameters
 https://github.com/microsoft/Swin-Transformer/blob/main/config.py
@@ -80,11 +83,20 @@ class ImageNet1K:
         self.dataset['train'].set_transform(self.process_train)
         self.dataset['validation'].set_transform(self.process_val)
 
+        # Distributed Sampler
+        if args.ddp:
+            self.train_sampler = DistributedSampler(self.dataset['train'], shuffle=True)
+            self.val_sampler = DistributedSampler(self.dataset['validation'], shuffle=False)
+        else: 
+            self.train_sampler = None
+            self.val_sampler = None
+            
         # Data Loaders 
         self.train_loader = DataLoader(
             dataset=self.dataset['train'], 
-            batch_size=args.batch_size, 
-            shuffle=True, 
+            batch_size=args.batch_size if not args.ddp else args.ddp_batch_size,
+            shuffle=(self.train_sampler is None),
+            sampler = self.train_sampler, 
             num_workers=args.num_workers,
             persistent_workers=args.persistent_workers,
             prefetch_factor=args.prefetch_factor, 
@@ -93,8 +105,9 @@ class ImageNet1K:
 
         self.val_loader = DataLoader(
             dataset=self.dataset['validation'], 
-            batch_size=args.batch_size, 
+            batch_size=args.batch_size if not args.ddp else args.ddp_batch_size, 
             shuffle=False, 
+            sampler=self.val_sampler,
             num_workers=args.num_workers, 
             persistent_workers=args.persistent_workers,
             prefetch_factor=args.prefetch_factor,

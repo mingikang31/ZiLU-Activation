@@ -3,9 +3,11 @@ import argparse
 from pathlib import Path 
 import os 
 import torch 
+from torch.nn.parallel import DistributedDataParallel as DDP
+import torch.distributed as dist
 
 # Datasets and Eval 
-from train_eval import Train_Eval, Train_Eval_ImageNet
+from train_eval import Train_Eval, Train_Eval_ImageNet, setup_distributed, cleanup_distributed
 from dataset import CIFAR10, CIFAR100, ImageNet1K, mixup_fn
 
 # Models 
@@ -93,6 +95,11 @@ def args_parser():
     # Test Arguments
     parser.add_argument("--test_only", action="store_true", help="Only test the model")
     parser.set_defaults(test_only=False)
+
+    # Distributed Data Parallel (DDP) 
+    parser.add_argument("--ddp", action="store_true", help="Use Distributed Data Parallel (DDP) for training")
+    parser.set_defaults(ddp=False)
+    parser.add_argument("--ddp_batch_size", type=int, default=128, help="Batch size per GPU for DDP training")
     
     return parser
 
@@ -102,6 +109,13 @@ def main(args):
         torch.set_float32_matmul_precision('high')
     except:
         print("Could not use TensorFloat-32")
+
+    # DDP Setup 
+    
+    local_rank = setup_distributed()
+    if dist.is_initialized() and dist.is_available():
+        args.ddp = True 
+        print(f"DDP is initialized. Local Rank: {local_rank}, World Size: {dist.get_world_size()}")
     
     # Dataset 
     if args.dataset == "cifar10":
@@ -113,11 +127,11 @@ def main(args):
         args.num_classes = dataset.num_classes 
         args.img_size = dataset.img_size 
     elif args.dataset == "imagenet1k":
+        args.batch_size = 1024 # Standard Batch Size for ImageNet-1K
+        args.augment = True
         dataset = ImageNet1K(args)
         args.num_classes = dataset.num_classes 
         args.img_size = dataset.img_size
-        args.batch_size = 1024 # Use larger batch size for ImageNet1K
-        args.augment = True # Always use augmentation/mixup for ImageNet1K
     else:
         raise ValueError("Dataset not supported")
 
@@ -179,6 +193,10 @@ def main(args):
     model.to(args.device)
     print(f"Model: {model.name}")
 
+    # Distributed Data Parallel
+    if args.ddp and dist.is_available() and dist.is_initialized():
+        model = DDP(model, device_ids=[local_rank])
+
     # Parameters
     total_params, trainable_params = model.parameter_count()
     print(f"Total Parameters: {total_params}")
@@ -210,10 +228,13 @@ def main(args):
                                         model, 
                                         dataset.train_loader, 
                                         dataset.test_loader,
-                                        mixup_fn=mixup_fn
+                                        train_sampler=dataset.train_sampler,
+                                        mixup_fn=mixup_fn, 
+                                        rank=local_rank
                                         )
 
-        
+        # Cleanup DDP
+        cleanup_distributed()
         
         # Store Results
         write_to_file(os.path.join(args.output_dir, "args.txt"), args)

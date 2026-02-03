@@ -16,7 +16,7 @@ from Models.resnet import ResNet
 from Models.vit import ViT
 
 # Utils 
-from utils import write_to_file, set_seed
+from utils import write_to_file
 
 """
 Dropout for ViT/Swin Transformer:
@@ -202,6 +202,7 @@ def main(args):
 
     # Distributed Data Parallel
     if args.ddp and dist.is_available() and dist.is_initialized():
+        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         model = DDP(model, device_ids=[local_rank])
     
     if args.test_only:

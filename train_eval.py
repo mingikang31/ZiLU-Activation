@@ -488,9 +488,12 @@ def Train_Eval_ImageNet(args,
     model.to(device) 
     train_criterion.to(device)
     eval_criterion.to(device) 
-    
-    scaler = GradScaler() if args.use_amp else None
 
+    # H100 Optimization 
+    use_bf16 = torch.cuda.is_bf16_supported()
+    dtype = torch.bfloat16 if use_bf16 else torch.float16
+    scaler = GradScaler() if (args.use_amp and not use_bf16) else None
+    
     epoch_results = [] 
 
     ## [GFLOPS] Computation using PyTorch Profiler ##
@@ -549,6 +552,7 @@ def Train_Eval_ImageNet(args,
                 labels = batch['labels'].to(device, non_blocking=True)
             else: 
                 images, labels = batch[0].to(device, non_blocking=True), batch[1].to(device, non_blocking=True)
+                
             # Apply Mixup if available
             if mixup_fn is not None:
                 images, labels = mixup_fn(images, labels)
@@ -557,16 +561,22 @@ def Train_Eval_ImageNet(args,
             
             # use mixed precision training
             if args.use_amp:
-                with autocast(device_type=args.device):
+                with autocast(device_type=args.device, dtype=dtype):
                     outputs = model(images)                    
                     loss = train_criterion(outputs, labels)
-                    
-                scaler.scale(loss).backward()
-                if args.clip_grad_norm:
-                    scaler.unscale_(optimizer) # Unscale gradients before clipping
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
-                scaler.step(optimizer)
-                scaler.update()
+
+                if scaler is not None: # FP16 Path 
+                    scaler.scale(loss).backward()
+                    if args.clip_grad_norm:
+                        scaler.unscale_(optimizer) # Unscale gradients before clipping
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
+                    scaler.step(optimizer)
+                    scaler.update()
+                else: # BF16 Path
+                    loss.backward()
+                    if args.clip_grad_norm:
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
+                    optimizer.step()
             else:    
                 outputs = model(images)
                 loss = train_criterion(outputs, labels)
@@ -586,13 +596,15 @@ def Train_Eval_ImageNet(args,
         if mixup_fn is None: 
             train_top1_5[0] /= len(train_loader)
             train_top1_5[1] /= len(train_loader)
+        train_running_loss /= len(train_loader)
 
-        # Model Evaluation
-        model.eval() 
+        ## Validation Phase 
         test_top1_5 = [0, 0]
+        test_running_loss = 0.0
+
+        model.eval()
         with torch.no_grad():
             for i, batch in enumerate(test_loader):
-
                 if isinstance(batch, dict):
                     images = batch['pixel_values'].to(device, non_blocking=True)
                     labels = batch['labels'].to(device, non_blocking=True)
@@ -600,7 +612,7 @@ def Train_Eval_ImageNet(args,
                     images, labels = batch[0].to(device, non_blocking=True), batch[1].to(device, non_blocking=True)
 
                 if args.use_amp:
-                    with autocast(device_type=args.device):
+                    with autocast(device_type=args.device, dtype=dtype):
                         outputs = model(images)
                 else: 
                     outputs = model(images)
@@ -612,45 +624,52 @@ def Train_Eval_ImageNet(args,
                 test_top1_5[0] += top1.item()
                 test_top1_5[1] += top5.item()
 
+        test_top1_5[0] /= len(test_loader)
+        test_top1_5[1] /= len(test_loader)
+        test_running_loss /= len(test_loader)
+
+        # Aggregate metrics across all processes
         val_metrics = torch.tensor([test_top1_5[0], test_top1_5[1], test_running_loss], device=device)
-
         if dist.is_initialized():
-            val_metrics = reduce_tensor(val_metrics)
+            dist.all_reduce(val_metrics, op=dist.ReduceOp.SUM) # Sum across all processes
+            val_metrics /= dist.get_world_size() # Average
 
-        test_top1_5 = [val_metrics[0].item() / len(test_loader), val_metrics[1].item() / len(test_loader)]
-        test_running_loss = val_metrics[2].item() / len(test_loader)
-    
+        test_top1_5[0] = val_metrics[0].item()
+        test_top1_5[1] = val_metrics[1].item()
+        test_running_loss = val_metrics[2].item()
 
         # Single Epoch Duration
         epoch_time = time.time() - start_time
         epoch_times.append(epoch_time)
 
         # Save Epoch Results
-        result_str = f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {train_running_loss/len(train_loader):.8f} Accuracy: Top1: {train_top1_5[0]:.4f}%, Top5: {train_top1_5[1]:.4f}% | [Test] Loss: {test_running_loss:.8f} Accuracy: Top1: {test_top1_5[0]:.4f}%, Top5: {test_top1_5[1]:.4f}%"
+        result_str = f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {train_running_loss:.8f} Accuracy: Top1: {train_top1_5[0]:.4f}%, Top5: {train_top1_5[1]:.4f}% | [Test] Loss: {test_running_loss:.8f} Accuracy: Top1: {test_top1_5[0]:.4f}%, Top5: {test_top1_5[1]:.4f}%"
         epoch_results.append(result_str)
 
-        # Print only for rank 0
-        if rank == 0:
-            print(result_str)
-        
-        # Max Accuracy Check
         if test_top1_5[0] > max_accuracy:
             max_accuracy = test_top1_5[0]
             max_epoch = epoch + 1
+            
+        # Print only for rank 0
+        if rank == 0:
+            print(result_str)
 
         # Learning Rate Scheduler Step
         scheduler.step(epoch + 1)
 
     if rank == 0: 
-
         epoch_results.append(f"\nAverage Epoch Time: {sum(epoch_times) / len(epoch_times):.4f}s")
         epoch_results.append(f"Max Accuracy: {max_accuracy:.4f}% at Epoch {max_epoch}")
 
-        # Saving model 
-        save_path = os.path.join(args.output_dir, f"final_model.pth")
-        model_to_save = model.module if hasattr(model, 'module') else model
+        try: 
+            # Saving model 
+            save_path = os.path.join(args.output_dir, f"final_model.pth")
+            model_to_save = model.module if hasattr(model, 'module') else model
 
-        save_model(model_to_save, args, optimizer, scheduler, epoch, test_top1_5[0], max_accuracy, save_path)
+            save_model(model_to_save, args, optimizer, scheduler, epoch, test_top1_5[0], max_accuracy, save_path)
+        except: 
+            print("Could not save the model.")
+        
     
     return epoch_results
 

@@ -18,6 +18,12 @@ from Models.vit import ViT
 # Utils 
 from utils import write_to_file
 
+import warnings
+warnings.filterwarnings('ignore')
+
+import logging
+logging.getLogger().setLevel(logging.ERROR)
+
 """
 Dropout for ViT/Swin Transformer:
     - Swin-T = 0.2
@@ -202,7 +208,7 @@ def main(args):
 
     # Distributed Data Parallel
     if args.ddp and dist.is_available() and dist.is_initialized():
-        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+        # model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model) # only necessary if using smaller gpu batch sizes (ex. three rtx3080 with batch size 32 each)
         model = DDP(model, device_ids=[local_rank])
     
     if args.test_only:

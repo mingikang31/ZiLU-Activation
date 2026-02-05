@@ -96,3 +96,6 @@ python vision_main.py --device cuda --output_dir ./Data/IMAGENET_TEST --use_amp 
 
 - Need to use DropPath (either from timm library or own implementation) for ViT, Swin, Transformer stuff
 
+[DDP Multi-GPU] 
+- Three rtx3080 with 64 batch size will always have worse performance than pro6000 with 1024 batch size. 
+    - If we are using a smaller overall batch size (192 vs. 1024), then New_LR = LR * New_batch_size / Original_batch_size

@@ -5,6 +5,8 @@ __pycache__/*
 Layers/__pycache__
 Testing/data/*
 
+*.RData 
+*.Rhistory
 
 Playground/data/*
 Data/* 

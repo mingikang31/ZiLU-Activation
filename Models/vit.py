@@ -39,6 +39,18 @@ class ViT(nn.Module):
         
         self.patch_embedding = PatchEmbedding(self.d_hidden, self.img_size, self.patch_size, self.n_channels) # Patch Embedding Layer
         self.positional_encoding = PositionalEncoding(self.d_hidden, self.max_seq_length)
+
+        self.dpr = [x.item() for x in torch.linspace(0, self.args.drop_path_rate, self.n_layers)]  # stochastic depth decay rule
+
+        # self.transformer_encoder = nn.Sequential(*[TransformerEncoder_DropPath(
+        #     args=args, 
+        #     d_hidden=self.d_hidden, 
+        #     d_mlp=self.d_mlp, 
+        #     num_heads=self.n_heads, 
+        #     dropout=self.dropout, 
+        #     attention_dropout=self.attention_dropout,
+        #     drop_path=self.dpr[i]
+        #     ) for i in range(self.n_layers)])
         
         self.transformer_encoder = nn.Sequential(*[TransformerEncoder(
             args=args, 
@@ -252,9 +264,10 @@ class TransformerEncoder(nn.Module):
         x = x + self.dropout2(mlp_output)  
         return x
 
-"""Transformer Encoder with DropPath will be used for ImageNet1K ViT Experiments"""
+"""Transformer Encoder with DropPath - Stochastic Depth"""
+# Used for Swin Transformer Experiments
 class TransformerEncoder_DropPath(nn.Module): 
-    def __init__(self, args, d_hidden, d_mlp, num_heads, dropout, attention_dropout):
+    def __init__(self, args, d_hidden, d_mlp, num_heads, dropout, attention_dropout, drop_path):
         super(TransformerEncoder_DropPath, self).__init__()
         self.args = args 
 
@@ -268,8 +281,7 @@ class TransformerEncoder_DropPath(nn.Module):
 
         self.norm1 = nn.LayerNorm(d_hidden)
         self.norm2 = nn.LayerNorm(d_hidden)
-        self.drop_path = DropPath(dropout)
-        self.drop_path2 = DropPath(dropout)
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
         # Activation Selection
         self.activation = args.activation
@@ -332,28 +344,25 @@ class TransformerEncoder_DropPath(nn.Module):
         # Post-Norm Feed Forward Network
         norm_x = self.norm2(x)  
         mlp_output = self.mlp(norm_x)
-        x = x + self.drop_path2(mlp_output)  
+        x = x + self.drop_path(mlp_output)  
         return x
 
-    
-"""Also can use timm's DropPath implementation"""
+"""Also can use timm's DropPath Implementation"""
 # from timm.models.layers import DropPath
 class DropPath(nn.Module):
-    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
-    """
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
     def __init__(self, drop_prob: float = 0.0):
         super(DropPath, self).__init__()
         self.drop_prob = drop_prob
-
+        
     def forward(self, x):
-        if self.drop_prob == 0. or not self.training:
+        if self.drop_prob == 0.0 or not self.training:
             return x
-
+        
         keep_prob = 1 - self.drop_prob
-        shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+        shape = (x.shape[0],) + (1,) * (x.ndim - 1)
         random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
         random_tensor.floor_()  # binarize
         output = x.div(keep_prob) * random_tensor
         return output
-        
-    
+

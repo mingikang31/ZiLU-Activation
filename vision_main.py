@@ -1,4 +1,6 @@
-"""Main File for ZiLU Activation Function"""
+"""Main File for ZiLU Activation Training and Evaluation"""
+
+
 import argparse 
 from pathlib import Path 
 import os 
@@ -18,9 +20,9 @@ from Models.vit import ViT
 # Utils 
 from utils import write_to_file
 
+# Warnings and Logging
 import warnings
 warnings.filterwarnings('ignore')
-
 import logging
 logging.getLogger().setLevel(logging.ERROR)
 
@@ -32,6 +34,15 @@ Dropout for ViT/Swin Transformer:
     
 """
 
+"""
+Drop Path Values 
+DeiT-Small = 0.1 
+DeiT-Base = 0.1
+Swin-tiny = 0.2
+Swin-small = 0.3
+Swin-base = 0.5
+
+"""
 
 def args_parser():
     parser = argparse.ArgumentParser(description="Activation Function Experiments")
@@ -57,7 +68,6 @@ def args_parser():
     parser.add_argument("--noise", type=float, default=0.0, help="Standard deviation of Gaussian noise to add to the data")
     parser.add_argument("--data_path", type=str, default="/mnt/research/j.farias/mkang2/Datasets", help="Path to the dataset")
 
-        
     # Training Arguments
     parser.add_argument("--compile", action="store_true", help="Use compiled model for training and evaluation")
     parser.set_defaults(compile=False)
@@ -83,7 +93,7 @@ def args_parser():
     # Optimizer Arguments 
     parser.add_argument('--optimizer', type=str, default='adamw', choices=['adam', 'sgd', 'adamw'], help='Default Optimizer: adamw')
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum for SGD optimizer') # Only for SGD
-    parser.add_argument('--weight_decay', type=float, default=1e-2, help='Weight decay for optimizer') # For Adam & Adamw
+    parser.add_argument('--weight_decay', type=float, default=1e-2, help='Weight decay for optimizer') # For Adam & Adamw, and SGD
     
     # Learning Rate Arguments
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate for the optimizer")
@@ -117,7 +127,6 @@ def main(args):
         print("Could not use TensorFloat-32")
 
     # DDP Setup 
-    
     local_rank = setup_distributed()
     if dist.is_initialized() and dist.is_available():
         args.ddp = True 
@@ -164,6 +173,7 @@ def main(args):
         args.num_layers = 12
         args.dropout = 0.1
         args.attention_dropout = 0.1
+        args.drop_path_rate = 0.0 # Drop Path not in use for ViT
         model = ViT(args)
         
     elif args.model == "vit-small":
@@ -174,6 +184,7 @@ def main(args):
         args.num_layers = 12 
         args.dropout = 0.1
         args.attention_dropout = 0.1
+        args.drop_path_rate = 0.0 # Drop Path not in use for ViT
         model = ViT(args)
 
     elif args.model == "vit-medium": 
@@ -184,6 +195,7 @@ def main(args):
         args.num_layers = 12
         args.dropout = 0.1 
         args.attention_dropout = 0.1
+        args.drop_path_rate = 0.0 # Drop Path not in use for ViT
         model = ViT(args) 
 
     elif args.model == "vit-base": 
@@ -194,6 +206,7 @@ def main(args):
         args.num_layers = 12 
         args.dropout = 0.1 
         args.attention_dropout = 0.1
+        args.drop_path_rate = 0.0 # Drop Path not in use for ViT
         model = ViT(args)
 
     model.to(args.device, memory_format=torch.channels_last) # For UserWarning: Grad strides do not match view strides
@@ -206,9 +219,9 @@ def main(args):
     args.total_params = total_params
     args.trainable_params = trainable_params
 
-    # Distributed Data Parallel
+    # Distributed Data Parallel (DDP)
     if args.ddp and dist.is_available() and dist.is_initialized():
-        # model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model) # only necessary if using smaller gpu batch sizes (ex. three rtx3080 with batch size 32 each)
+        # model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model) # only necessary if using smaller gpu and smaller batch size (ex. three rtx3080 with batch size 32 each) 
         model = DDP(model, device_ids=[local_rank])
     
     if args.test_only:
@@ -248,6 +261,6 @@ def main(args):
         write_to_file(os.path.join(args.output_dir, "train_eval_results.txt"), train_eval_results)
 
 if __name__ == '__main__': 
-    parser = argparse.ArgumentParser(description="Activation Functions", parents=[args_parser()], add_help=False)
+    parser = argparse.ArgumentParser(description="ZaiLU Activation Function", parents=[args_parser()], add_help=False)
     args = parser.parse_args()
     main(args)

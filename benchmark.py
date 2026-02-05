@@ -4,8 +4,6 @@ import torch.nn.functional as F
 import time
 import pandas as pd
 
-## TODO use nn.functional where possible for speed as they are often faster than nn.Module counterparts
-## TODO implement squareplus activation for benchmarking
 """
 Activation Functions
 """

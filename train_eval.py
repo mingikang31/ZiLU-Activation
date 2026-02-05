@@ -1,30 +1,38 @@
 '''Training & Evaluation Module for Convolutional Neural Networks'''
 
-import os
-import torch
-import torch.nn as nn
-import torch.optim as optim
+# Utility Imports 
+import os 
 import time 
+
+# Torch 
+import torch 
+import torch.nn as nn 
+import torch.optim as optim 
 from torch.amp.grad_scaler import GradScaler
 from torch.amp.autocast_mode import autocast
-import torch.profiler
-from utils import set_seed
-from transformers import get_linear_schedule_with_warmup
+import torch.profiler 
+import torch.distributed as dist # Data Parallel
 
-# Timm for Vision Transformers 
-from timm.loss import SoftTargetCrossEntropy 
+# Timm + Huggingface for Swin Transformer Training 
+from timm.loss import SoftTargetCrossEntropy
 from timm.scheduler.cosine_lr import CosineLRScheduler
+from transformers import get_linear_schedule_with_warmup    
 
-# Distributed Data Parallel 
-import torch.distributed as dist
+# Custom Imports
+from utils import set_seed
 
 """ Setup distributed training environment """
 def setup_distributed():
     # Torchrun sets the following environment variables
     if "RANK" in os.environ:
         dist.init_process_group(backend="nccl")
+
+        rank = int(os.environ["RANK"])
         local_rank = int(os.environ["LOCAL_RANK"])
-        torch.cuda.set_device(local_rank)
+        word_size = int(os.environ["WORLD_SIZE"])
+
+        device = torch.device(f"cuda:{local_rank}")
+        torch.cuda.set_device(device)
         return local_rank 
     else: 
         print("Not using Distributed Data Parallel Mode")
@@ -172,6 +180,7 @@ def Train_Eval(args,
 
         train_top1_5[0] /= len(train_loader)
         train_top1_5[1] /= len(train_loader)
+        train_running_loss /= len(train_loader)
         
         # Model Evaluation 
         model.eval()
@@ -193,13 +202,14 @@ def Train_Eval(args,
         
         test_top1_5[0] /= len(test_loader)
         test_top1_5[1] /= len(test_loader)
+        test_running_loss /= len(test_loader)
 
         # Single Epoch Duration
         epoch_time = time.time() - start_time
         epoch_times.append(epoch_time)
 
         # Save Epoch Results
-        epoch_results.append(f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {train_running_loss/len(train_loader):.8f} Accuracy: Top1: {train_top1_5[0]:.4f}%, Top5: {train_top1_5[1]:.4f}% | [Test] Loss: {test_running_loss/len(test_loader):.8f} Accuracy: Top1: {test_top1_5[0]:.4f}%, Top5: {test_top1_5[1]:.4f}%")
+        epoch_results.append(f"[Epoch {epoch+1:03d}] Time: {epoch_time:.4f}s | [Train] Loss: {train_running_loss:.8f} Accuracy: Top1: {train_top1_5[0]:.4f}%, Top5: {train_top1_5[1]:.4f}% | [Test] Loss: {test_running_loss:.8f} Accuracy: Top1: {test_top1_5[0]:.4f}%, Top5: {test_top1_5[1]:.4f}%")
         print(epoch_results[-1])
         
         # Max Accuracy Check
@@ -274,9 +284,7 @@ def Train_Eval_GPT(args,
     try:
         model.eval()
         batch = next(iter(train_loader))
-
         tokens = batch["input_ids"].to(device)
-        
         inputs = tokens[:, :-1].contiguous()
         targets = tokens[:, 1:].contiguous()
 
@@ -288,7 +296,6 @@ def Train_Eval_GPT(args,
             with torch.no_grad():
                 logits, loss = model(inputs[0:1], target=targets[0:1])
 
-        # A more robust way to get total FLOPs: sum them up from all events
         total_flops = sum(event.flops for event in prof.key_averages())
 
         if total_flops > 0:
@@ -661,16 +668,12 @@ def Train_Eval_ImageNet(args,
         epoch_results.append(f"\nAverage Epoch Time: {sum(epoch_times) / len(epoch_times):.4f}s")
         epoch_results.append(f"Max Accuracy: {max_accuracy:.4f}% at Epoch {max_epoch}")
 
-        try: 
-            # Saving model 
-            save_path = os.path.join(args.output_dir, f"final_model.pth")
-            model_to_save = model.module if hasattr(model, 'module') else model
+        # Saving model 
+        save_path = os.path.join(args.output_dir, f"final_model.pth")
+        model_to_save = model.module if hasattr(model, 'module') else model
 
-            save_model(model_to_save, args, optimizer, scheduler, epoch, test_top1_5[0], max_accuracy, save_path)
-        except: 
-            print("Could not save the model.")
-        
-    
+        save_model(model_to_save, args, optimizer, scheduler, epoch, test_top1_5[0], max_accuracy, save_path)
+
     return epoch_results
 
 def save_model(model, args, optimizer, scheduler, epoch, last_accuracy, best_accuracy, checkpoint_path):

@@ -19,7 +19,7 @@ from timm.data.mixup import Mixup
 # Distributed Data Parallel 
 from torch.utils.data.distributed import DistributedSampler
 
-"""d
+"""
 Swin Transformer Config for Hyperparameters
 https://github.com/microsoft/Swin-Transformer/blob/main/config.py
 """
@@ -66,11 +66,6 @@ class ImageNet1K:
             transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
         ])
 
-        # Rank 0 downloads/caches while others wait
-        # if args.ddp: 
-        #     if dist.get_rank() != 0:
-        #         dist.barrier()
-
         # Loading/Download Dataset 
         if os.path.exists(os.path.join(self.cache_dir, "dataset_dict.json")):
             print(f"Loading cached ImageNet file from {self.cache_dir}")
@@ -84,11 +79,6 @@ class ImageNet1K:
 
             print(f"Saving preprocessed dataset to {self.cache_dir}")
             self.dataset.save_to_disk(self.cache_dir)
-
-        # Rank 0 is done 
-        # if args.ddp:
-        #     if dist.get_rank() == 0:
-        #         dist.barrier()
 
         # Dataset transforms 
         self.dataset['train'].set_transform(self.process_train)
@@ -136,7 +126,6 @@ class ImageNet1K:
             "pixel_values": pixel_values, 
             "labels": examples['label']
         }
-        
 
     def process_val(self, examples):
         images = [img.convert("RGB") for img in examples['image']]

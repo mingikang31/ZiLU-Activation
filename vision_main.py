@@ -52,7 +52,7 @@ def args_parser():
         'relu', 'gelu', 'silu', 'sigmoid', 'gelu_s', 'silu_s', 'zilu_old', 
         'arctan', 'arctan_approx', 'zilu', 'zilu_approx', 'leaky_relu', 'prelu', 
         'elu', 'hardshrink', 'softshrink', 'tanhshrink', 'hardtanh', 'softplus', 'softsign', 
-        'tanh', 'celu', 'mish', 'hardswish', 'hardsigmoid', 'selu', 'squareplus'
+        'tanh', 'celu', 'mish', 'hardswish', 'hardsigmoid', 'selu', 'squareplus', 'identity'
     ], help='Activation function to use')
     parser.add_argument('--sigma', type=float, default=None, help='Sigma parameter for ZiLU activation function')
     parser.add_argument('--inplace', action='store_true', help='Use inplace activation functions')
@@ -99,7 +99,7 @@ def args_parser():
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate for the optimizer")
     parser.add_argument('--lr_step', type=int, default=20, help='Step size for learning rate scheduler') # Only for StepLR
     parser.add_argument('--lr_gamma', type=float, default=0.1, help='Gamma for learning rate scheduler') # Only for StepLR
-    parser.add_argument('--scheduler', type=str, default='cosine', choices=['step', 'cosine', 'plateau'], help='Learning rate scheduler')
+    parser.add_argument('--scheduler', type=str, default='cosine', choices=['step', 'cosine', 'plateau', 'none'], help='Learning rate scheduler')
     
     # Device Arguments
     parser.add_argument("--device", type=str, default="cuda", choices=["cpu", "cuda", "mps"], help="Device to use for training and evaluation")

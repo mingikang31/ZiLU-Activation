@@ -29,7 +29,7 @@ def args_parser():
         'relu', 'gelu', 'silu', 'sigmoid', 'gelu_s', 'silu_s', 'zilu_old', 
         'arctan', 'arctan_approx', 'zilu', 'zilu_approx', 'leaky_relu', 'prelu', 
         'elu', 'hardshrink', 'softshrink', 'tanhshrink', 'hardtanh', 'softplus', 'softsign', 
-        'tanh', 'celu', 'mish', 'hardswish', 'hardsigmoid', 'selu', 'squareplus'
+        'tanh', 'celu', 'mish', 'hardswish', 'hardsigmoid', 'selu', 'squareplus', 'identity'
     ], help='Activation function to use')    
     parser.add_argument('--sigma', type=float, default=None, help='Sigma parameter for ZiLU activation function')
     parser.add_argument('--inplace', action='store_true', help='Use inplace activation functions')

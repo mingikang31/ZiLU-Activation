@@ -1,28 +1,29 @@
-#! /bin/bash 
+#!/bin/bash 
 #SBATCH --nodes=1 
-#SBATCH --mem=64G
-#SBATCH -p gpu --gres=gpu:a100:1
-#SBATCH --cpus-per-task=4
+#SBATCH --mem=128G
+#SBATCH -p arm --gres=shard:32
+#SBATCH --cpus-per-task=48
 #SBATCH --job-name=vit_exp
-#SBATCH --time=500:00:00
+#SBATCH --time=96:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
 source ~/.bashrc
-conda activate torch-a100
+conda activate torch-gh200
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
-DATASETS=("cifar100")
 
-ACTIVATIONS=('hardsigmoid' 'selu')
 
-LR="1e-3"
 
 COUNT=0
 FAILED=0
+
+DATASETS=("cifar10" "cifar100")
+ACTIVATIONS=('identity')
+LR="1e-3"
 
 # Baseline Experiments (ReLU, GeLU, SiLU) 
 for ds in "${DATASETS[@]}"; do 
@@ -54,7 +55,7 @@ for ds in "${DATASETS[@]}"; do
             --device cuda \
             --seed 42 \
             --output_dir $output_dir \
-            --num_workers 4 \
+            --num_workers 12 \
             --pin_memory
 
         # Check if experiment succeeded

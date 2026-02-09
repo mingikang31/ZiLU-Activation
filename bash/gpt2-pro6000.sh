@@ -16,7 +16,7 @@ conda activate torch-pro6000
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
 
 DATASETS=("wikitext103")
-ACTIVATIONS=('selu' 'squareplus')
+ACTIVATIONS=('identity')
 LR="6e-4"
 
 COUNT=0

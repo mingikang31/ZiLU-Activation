@@ -1,69 +1,69 @@
-#! /bin/bash 
+#!/bin/bash 
 #SBATCH --nodes=1 
-#SBATCH --mem=480G
-#SBATCH -p mixed --gres=gpu:pro6000:1
-#SBATCH --cpus-per-gpu=80
-#SBATCH --job-name=resnet34_exp
-#SBATCH --time=720:00:00
+#SBATCH --mem=128G
+#SBATCH -p arm --gres=shard:32
+#SBATCH --cpus-per-task=48
+#SBATCH --job-name=resnet_exp
+#SBATCH --time=96:00:00
 #SBATCH --output=slurm_out/%j.out
 #SBATCH --error=slurm_out/%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=mkang2@bowdoin.edu
 
 source ~/.bashrc
-conda activate torch-pro6000
+conda activate torch-gh200
 
 cd /mnt/research/j.farias/mkang2/ZiLU-Activation 
+
 
 COUNT=0
 FAILED=0
 
-# DATASETS=("cifar10" "cifar100")
-# ACTIVATIONS=('gelu_s' 'silu_s')
-# LR="1e-3"
-# # Baseline Experiments (ReLU, GeLU, SiLU) 
-# for ds in "${DATASETS[@]}"; do 
-#     for act in "${ACTIVATIONS[@]}"; do 
+DATASETS=("cifar10" "cifar100")
+ACTIVATIONS=('identity')
+LR="1e-3"
+# Baseline Experiments (ReLU, GeLU, SiLU) 
+for ds in "${DATASETS[@]}"; do 
+    for act in "${ACTIVATIONS[@]}"; do 
 
-#         COUNT=$((COUNT + 1)) 
+        COUNT=$((COUNT + 1)) 
 
-#         output_dir="./Output/AUG/ResNet34-3/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
+        output_dir="./Output/AUG/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_s42" 
 
-#         echo "[$COUNT] Dataset=$ds | Activation=$act"
+        echo "[$COUNT] Dataset=$ds | Activation=$act"
 
-#         python vision_main.py \
-#             --activation $act \
-#             --inplace \
-#             --model resnet34 \
-#             --dataset $ds \
-#             --augment \
-#             --data_path ./Data \
-#             --batch_size 128 \
-#             --num_epochs 200 \
-#             --compile \
-#             --clip_grad_norm 1.0 \
-#             --criterion CrossEntropy \
-#             --optimizer adamw \
-#             --weight_decay 1e-2 \
-#             --lr $LR \
-#             --scheduler cosine \
-#             --device cuda \
-#             --seed 42 \
-#             --output_dir $output_dir \
-#             --num_workers 12 \
-#             --pin_memory
+        python vision_main.py \
+            --activation $act \
+            --inplace \
+            --model resnet34 \
+            --dataset $ds \
+            --augment \
+            --data_path ./Data \
+            --batch_size 128 \
+            --num_epochs 200 \
+            --clip_grad_norm 1.0 \
+            --criterion CrossEntropy \
+            --optimizer adamw \
+            --weight_decay 1e-2 \
+            --lr $LR \
+            --scheduler cosine \
+            --device cuda \
+            --seed 42 \
+            --output_dir $output_dir \
+            --num_workers 12 \
+            --pin_memory
 
-#         # Check if experiment succeeded
-#         if [ $? -eq 0 ]; then
-#             echo "✓ Experiment $COUNT succeeded"
-#         else
-#             echo "✗ Experiment $COUNT failed"
-#             FAILED=$((FAILED + 1))
-#         fi
-#         echo ""
+        # Check if experiment succeeded
+        if [ $? -eq 0 ]; then
+            echo "✓ Experiment $COUNT succeeded"
+        else
+            echo "✗ Experiment $COUNT failed"
+            FAILED=$((FAILED + 1))
+        fi
+        echo ""
 
-#     done 
-# done 
+    done 
+done 
 
 
 # # # Vary Sigmas 
@@ -120,57 +120,57 @@ FAILED=0
 # done 
 
 
-# # Vary Sigmas 
-DATASETS=("cifar10" "cifar100")
-# ACTIVATIONS=('gelu_s' 'silu_s' 'zilu' 'zilu_approx')
-ACTIVATIONS=('zilu' 'zilu_approx')
-LR="1e-3"
-SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
+# # # Vary Sigmas 
+# DATASETS=("cifar10" "cifar100")
+# # ACTIVATIONS=('gelu_s' 'silu_s' 'zilu' 'zilu_approx')
+# ACTIVATIONS=('zilu' 'zilu_approx')
+# LR="1e-3"
+# SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
 
-# Vary sigmas
-for ds in "${DATASETS[@]}"; do 
-    for act in "${ACTIVATIONS[@]}"; do 
-        for sigma in "${SIGMAS[@]}"; do 
+# # Vary sigmas
+# for ds in "${DATASETS[@]}"; do 
+#     for act in "${ACTIVATIONS[@]}"; do 
+#         for sigma in "${SIGMAS[@]}"; do 
 
-            COUNT=$((COUNT + 1)) 
+#             COUNT=$((COUNT + 1)) 
 
-            output_dir="./Output/AUG/ResNet34-5/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
+#             output_dir="./Output/AUG/ResNet34-5/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
 
-            echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
+#             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
-            python vision_main.py \
-                --activation $act \
-                --sigma $sigma \
-                --inplace \
-                --model resnet34 \
-                --dataset $ds \
-                --augment \
-                --data_path ./Data \
-                --batch_size 128 \
-                --num_epochs 200 \
-                --clip_grad_norm 1.0 \
-                --criterion CrossEntropy \
-                --optimizer adamw \
-                --weight_decay 1e-2 \
-                --lr $LR \
-                --scheduler cosine \
-                --device cuda \
-                --seed 42 \
-                --output_dir $output_dir \
-                --num_workers 12 
+#             python vision_main.py \
+#                 --activation $act \
+#                 --sigma $sigma \
+#                 --inplace \
+#                 --model resnet34 \
+#                 --dataset $ds \
+#                 --augment \
+#                 --data_path ./Data \
+#                 --batch_size 128 \
+#                 --num_epochs 200 \
+#                 --clip_grad_norm 1.0 \
+#                 --criterion CrossEntropy \
+#                 --optimizer adamw \
+#                 --weight_decay 1e-2 \
+#                 --lr $LR \
+#                 --scheduler cosine \
+#                 --device cuda \
+#                 --seed 42 \
+#                 --output_dir $output_dir \
+#                 --num_workers 12 
                 
-            # Check if experiment succeeded
-            if [ $? -eq 0 ]; then
-                echo "✓ Experiment $COUNT succeeded"
-            else
-                echo "✗ Experiment $COUNT failed"
-                FAILED=$((FAILED + 1))
-            fi
-            echo ""
+#             # Check if experiment succeeded
+#             if [ $? -eq 0 ]; then
+#                 echo "✓ Experiment $COUNT succeeded"
+#             else
+#                 echo "✗ Experiment $COUNT failed"
+#                 FAILED=$((FAILED + 1))
+#             fi
+#             echo ""
         
-        done 
-    done 
-done 
+#         done 
+#     done 
+# done 
 
 
 echo "=========================================="

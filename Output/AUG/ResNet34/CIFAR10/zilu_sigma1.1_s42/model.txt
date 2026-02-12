@@ -1,0 +1,370 @@
+training: False
+_parameters: {}
+_buffers: {}
+_non_persistent_buffers_set: set()
+_backward_pre_hooks: OrderedDict()
+_backward_hooks: OrderedDict()
+_is_full_backward_hook: None
+_forward_hooks: OrderedDict()
+_forward_hooks_with_kwargs: OrderedDict()
+_forward_hooks_always_called: OrderedDict()
+_forward_pre_hooks: OrderedDict()
+_forward_pre_hooks_with_kwargs: OrderedDict()
+_state_dict_hooks: OrderedDict()
+_state_dict_pre_hooks: OrderedDict()
+_load_state_dict_pre_hooks: OrderedDict()
+_load_state_dict_post_hooks: OrderedDict()
+_modules: {'activation_first_conv': ZiLU(
+  (arctan): ArcTan()
+), 'first_conv': Sequential(
+  (0): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+  (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (2): ZiLU(
+    (arctan): ArcTan()
+  )
+  (3): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+), 'layer1': Sequential(
+  (0): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (1): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (2): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+), 'layer2': Sequential(
+  (0): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Sequential(
+      (0): Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+  )
+  (1): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (2): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (3): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+), 'layer3': Sequential(
+  (0): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Sequential(
+      (0): Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+  )
+  (1): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (2): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (3): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (4): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (5): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+), 'layer4': Sequential(
+  (0): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Sequential(
+      (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+      (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+  )
+  (1): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (2): ResBlock(
+    (activation1): ZiLU(
+      (arctan): ArcTan()
+    )
+    (final_activation): ZiLU(
+      (arctan): ArcTan()
+    )
+    (layer1): Sequential(
+      (0): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ZiLU(
+        (arctan): ArcTan()
+      )
+    )
+    (layer2): Sequential(
+      (0): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+), 'classifier': Sequential(
+  (0): AdaptiveAvgPool2d(output_size=(1, 1))
+  (1): Flatten(start_dim=1, end_dim=-1)
+  (2): Linear(in_features=512, out_features=10, bias=True)
+)}
+args: Namespace(activation='zilu', sigma=1.1, inplace=True, model='resnet34', dataset='cifar10', resize=None, augment=True, noise=0.0, data_path='./Data', compile=False, compile_mode='default', batch_size=128, num_epochs=200, use_amp=False, clip_grad_norm=1.0, num_workers=12, persistent_workers=False, prefetch_factor=None, pin_memory=True, criterion='CrossEntropy', optimizer='adamw', momentum=0.9, weight_decay=0.01, lr=0.001, lr_step=20, lr_gamma=0.1, scheduler='cosine', device='cuda', seed=42, output_dir='./Output/AUG/ResNet34/CIFAR10/zilu_sigma1.1_s42', test_only=False, ddp=False, ddp_batch_size=128, num_classes=10, img_size=(3, 32, 32), total_params=21289802, trainable_params=21289802)
+num_classes: 10
+name: resnet34 - zilu
+activation: zilu
+activation_map: {'relu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a76422a0>, 'silu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7642840>, 'gelu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7642a20>, 'sigmoid': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7642de0>, 'gelu_s': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7642e80>, 'silu_s': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7642f20>, 'zilu_old': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7642fc0>, 'arctan': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643060>, 'arctan_approx': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643100>, 'zilu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a76431a0>, 'zilu_approx': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643240>, 'squareplus': <function ResNet.__init__.<locals>.<lambda> at 0x4001a76432e0>, 'leaky_relu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643380>, 'prelu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643420>, 'elu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a76434c0>, 'hardshrink': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643560>, 'softshrink': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643600>, 'tanhshrink': <function ResNet.__init__.<locals>.<lambda> at 0x4001a76436a0>, 'softplus': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643740>, 'softsign': <function ResNet.__init__.<locals>.<lambda> at 0x4001a76437e0>, 'tanh': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643880>, 'celu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643920>, 'mish': <function ResNet.__init__.<locals>.<lambda> at 0x4001a76439c0>, 'hardswish': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643a60>, 'hardsigmoid': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643b00>, 'selu': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643ba0>, 'hardtanh': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643c40>, 'identity': <function ResNet.__init__.<locals>.<lambda> at 0x4001a7643ce0>}
+expansion: 1
+in_channels: 512

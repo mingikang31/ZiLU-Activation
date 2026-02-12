@@ -61,6 +61,25 @@ class ArcTan_Approx(nn.Module):
         z = self.sigma * x 
         return (0.5 + torch.clamp(z, min=0)) / (1.0 + torch.abs(z))
 
+class ArcTan_TensorChange(nn.Module):
+    def __init__(self, sigma=None):
+        super(ArcTan_TensorChange, self).__init__()
+
+        self.sigma = torch.tensor(sigma) if sigma else nn.Parameter(torch.tensor(5.0))
+
+    def forward(self, x):
+        return torch.tensor(0.5) + (torch.tensor(1.0) / torch.pi) * torch.arctan(self.sigma * x)
+
+class ArcTan_Approx_TensorChange(nn.Module):
+    def __init__(self, sigma=None):
+        super(ArcTan_Approx_TensorChange, self).__init__()
+        
+        self.sigma = torch.tensor(sigma) if sigma else nn.Parameter(torch.tensor(5.0))
+
+    def forward(self, x): 
+        z = self.sigma * x 
+        return (torch.tensor(0.5) + torch.clamp(z, min=0)) / (torch.tensor(1.0) + torch.abs(z))
+
 class ZiLU(nn.Module):
     def __init__(self, sigma=None):
         super(ZiLU, self).__init__()

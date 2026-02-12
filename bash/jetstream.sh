@@ -25,11 +25,10 @@ torchrun --nproc_per_node=4 \
         --ddp \
         --ddp_batch_size 1024
 
-
-### Current configuration on JetStream2 H100 g5.4xl ###
+### ResNet50 Training Log on JetStream2 H100 g5.4xl ###
 # 4x NVIDIA H100 80GB HBM3 GPUs
 
-# (torch-h100) exouser@imagenet1k:~$ gpustat
+### gpustat log during training ###
 # imagenet1k                Wed Feb  4 00:30:24 2026  580.126.09
 # [0] NVIDIA H100 80GB HBM3 | 52°C,  55 % | 54984 / 81559 MB | exouser(54908M)
 # [1] NVIDIA H100 80GB HBM3 | 57°C,  98 % | 54984 / 81559 MB | exouser(54908M)

@@ -68,9 +68,8 @@ FAILED=0
 
 # # Vary Sigmas 
 DATASETS=("cifar10" "cifar100")
-ACTIVATIONS=('zilu' 'zilu_approx')
+ACTIVATIONS=('arctan' 'arctan_approx')
 LR="1e-3"
-# SIGMAS=("1.01" "1.05" "1.1" "0.99" "0.95")
 SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")
 
 # Vary sigmas
@@ -80,7 +79,7 @@ for ds in "${DATASETS[@]}"; do
 
             COUNT=$((COUNT + 1)) 
 
-            output_dir="./Output/AUG/ResNet34-TensorChange/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
+            output_dir="./Output/AUG/ResNet34/$(echo $ds | awk '{print toupper($0)}')/${act}_sigma${sigma}_s42"
 
             echo "[$COUNT] Dataset=$ds | Activation=$act | Sigma=$sigma"
 
@@ -94,6 +93,7 @@ for ds in "${DATASETS[@]}"; do
                 --data_path ./Data \
                 --batch_size 128 \
                 --num_epochs 200 \
+                --use_amp \
                 --clip_grad_norm 1.0 \
                 --criterion CrossEntropy \
                 --optimizer adamw \

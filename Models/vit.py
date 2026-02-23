@@ -109,7 +109,7 @@ class PatchEmbedding(nn.Module):
         x = self.linear_projection(x) # (B, C, H, W) -> (B, d_hidden, H', W')
         x = self.flatten(x) # (B, d_hidden, H', W') -> (B, d_hidden, n_patches)
         x = x.transpose(1, 2) # (B, d_hidden, n_patches) -> (B, n_patches, d_hidden)
-        x = self.norm(x) # (B, n_patches, d_hidden) -> (B, n_patches, d_hidden)
+        # x = self.norm(x) # (B, n_patches, d_hidden) -> (B, n_patches, d_hidden) ## NO NORM TEST
         return x
     
 class PositionalEncoding(nn.Module):
@@ -255,12 +255,14 @@ class TransformerEncoder(nn.Module):
         
     def forward(self, x): 
         # Pre-Norm Multi-Head Attention 
-        norm_x = self.norm1(x) 
+        # norm_x = self.norm1(x) 
+        norm_x = x
         attn_output = self.attention(norm_x)  
         x = x + self.dropout1(attn_output)
         
         # Post-Norm Feed Forward Network
-        norm_x = self.norm2(x)  
+        # norm_x = self.norm2(x)  
+        norm_x = x
         mlp_output = self.mlp(norm_x)
         x = x + self.dropout2(mlp_output)  
         return x
@@ -339,12 +341,14 @@ class TransformerEncoder_DropPath(nn.Module):
         
     def forward(self, x): 
         # Pre-Norm Multi-Head Attention 
-        norm_x = self.norm1(x) 
+        # norm_x = self.norm1(x) 
+        norm_x = x
         attn_output = self.attention(norm_x)  
         x = x + self.drop_path(attn_output)
         
         # Post-Norm Feed Forward Network
-        norm_x = self.norm2(x)  
+        # norm_x = self.norm2(x)  
+        norm_x = x
         mlp_output = self.mlp(norm_x)
         x = x + self.drop_path(mlp_output)  
         return x

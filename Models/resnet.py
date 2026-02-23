@@ -68,7 +68,7 @@ class ResNet(nn.Module):
 
         self.first_conv = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
-            nn.BatchNorm2d(64), 
+            # nn.BatchNorm2d(64), 
             self.activation_first_conv,
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
@@ -204,19 +204,19 @@ class ResBlock(nn.Module):
 
         self.layer1 = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels),
+            # nn.BatchNorm2d(out_channels),
             self.activation1
         )
         self.layer2 = nn.Sequential(
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels),
+            # nn.BatchNorm2d(out_channels),
         )
         
         # Identity mapping
         if stride != 1 or in_channels != out_channels: 
             self.identity = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False), 
-                nn.BatchNorm2d(out_channels)
+                # nn.BatchNorm2d(out_channels)
             )
         else:
             self.identity = nn.Identity()
@@ -299,28 +299,28 @@ class BottleNeck(nn.Module):
         # 1x1 conv to reduce channels 
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1), 
-            nn.BatchNorm2d(out_channels),
+            # nn.BatchNorm2d(out_channels),
             self.activation1
         )
 
         # 3x3 conv with stride (main processing) 
         self.conv2 = nn.Sequential(
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1),
-            nn.BatchNorm2d(out_channels),
+            # nn.BatchNorm2d(out_channels),
             self.activation2
         )
 
         # 1x1 conv to expand channels 
         self.conv3 = nn.Sequential(
             nn.Conv2d(out_channels, out_channels * self.expansion, kernel_size=1, stride=1),
-            nn.BatchNorm2d(out_channels * self.expansion)
+            # nn.BatchNorm2d(out_channels * self.expansion)
         )
 
         # Identity Mapping 
         if stride != 1 or in_channels != out_channels * self.expansion: 
             self.identity = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels * self.expansion, kernel_size=1, stride=stride), 
-                nn.BatchNorm2d(out_channels * self.expansion)
+                # nn.BatchNorm2d(out_channels * self.expansion)
             )
         else: 
             self.identity = nn.Identity() 

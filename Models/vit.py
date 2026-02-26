@@ -101,7 +101,8 @@ class PatchEmbedding(nn.Module):
         self.n_channels = n_channels # Number of Channels in Image
         
         self.linear_projection = nn.Conv2d(in_channels=n_channels, out_channels=d_hidden, kernel_size=patch_size, stride=patch_size) # Linear Projection Layer
-        self.norm = nn.LayerNorm(d_hidden) # Normalization Layer
+        # self.norm = nn.LayerNorm(d_hidden) # Normalization Layer
+        self.norm = ViTBatchNorm(d_hidden)
         
         self.flatten = nn.Flatten(start_dim=2)
         
@@ -109,7 +110,7 @@ class PatchEmbedding(nn.Module):
         x = self.linear_projection(x) # (B, C, H, W) -> (B, d_hidden, H', W')
         x = self.flatten(x) # (B, d_hidden, H', W') -> (B, d_hidden, n_patches)
         x = x.transpose(1, 2) # (B, d_hidden, n_patches) -> (B, n_patches, d_hidden)
-        x = self.norm(x) # (B, n_patches, d_hidden) -> (B, n_patches, d_hidden) ## NO NORM TEST
+        x = self.norm(x) # (B, n_patches, d_hidden) -> (B, n_patches, d_hidden)
         return x
     
 class PositionalEncoding(nn.Module):
@@ -195,8 +196,12 @@ class TransformerEncoder(nn.Module):
 
         self.attention = MultiHeadAttention(d_hidden, num_heads, attention_dropout)
 
-        self.norm1 = nn.LayerNorm(d_hidden)
-        self.norm2 = nn.LayerNorm(d_hidden)
+        # self.norm1 = nn.LayerNorm(d_hidden)
+        # self.norm2 = nn.LayerNorm(d_hidden)
+
+        # ViT Batch Norm 
+        self.norm1 = ViTBatchNorm(d_hidden)
+        self.norm2 = ViTBatchNorm(d_hidden)
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
 

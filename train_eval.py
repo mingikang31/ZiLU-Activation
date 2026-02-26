@@ -50,7 +50,6 @@ def reduce_tensor(tensor):
     rt /= dist.get_world_size()
     return rt 
 
-
 """Computes the top-1 and top-5 accuracy of the model."""
 def accuracy(output, target, topk=(1,)):
     maxk = min(max(topk), output.size()[1])
@@ -59,7 +58,6 @@ def accuracy(output, target, topk=(1,)):
     pred = pred.t()
     correct = pred.eq(target.reshape(1, -1).expand_as(pred))
     return [correct[:min(k, maxk)].reshape(-1).float().sum(0) * 100.0 / batch_size for k in topk] # [72.5, 91.3] - [top1, top5]
-
 
 """Computes Balanced Accuracy for Long-Tailed Classification"""
 def balanced_accuracy(output, target, num_classes):
@@ -84,6 +82,7 @@ def balanced_accuracy(output, target, num_classes):
     balanced_acc = per_class_acc.mean() * 100.0  # Return as percentage to match accuracy()
     
     return balanced_acc
+
 
 """
 [Training Functions] 
@@ -263,6 +262,7 @@ def Train_Eval_LT(args,
                model: nn.Module, 
                dataset, 
                ):
+    """ Training & Evaluation Loop for Long-Tailed Classification"""
     
     if args.seed != 0:
         set_seed(args.seed)
@@ -272,7 +272,6 @@ def Train_Eval_LT(args,
     train_loader = dataset.train_loader 
     test_loader = dataset.test_loader
     
-
     # Loss Criterion
     if args.criterion == 'CrossEntropy':
         train_targets = [dataset.train_data.dataset.targets[i] for i in dataset.train_data.indices]
@@ -285,6 +284,8 @@ def Train_Eval_LT(args,
         
         print(f"[DEBUG] Class weight range: min={cls_weights.min():.4f}, max={cls_weights.max():.4f}, ratio={cls_weights.max()/cls_weights.min():.1f}")
         print(f"[DEBUG] Samples per class range: min={min(img_num_per_cls)}, max={max(img_num_per_cls)}, total={sum(img_num_per_cls)}")
+
+        eval_criterion = nn.CrossEntropyLoss() # Evaluation uses standard CrossEntropy without class weights
         
     elif args.criterion == 'MSE':
         criterion = nn.MSELoss()
@@ -296,7 +297,6 @@ def Train_Eval_LT(args,
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     elif args.optimizer == 'adamw':
         optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-        
 
     # Learning Rate Scheduler
     scheduler = None
@@ -418,10 +418,10 @@ def Train_Eval_LT(args,
                 if args.use_amp:
                     with autocast(device_type=args.device):
                         outputs = model(images)
-                        loss = criterion(outputs, labels)
+                        loss = eval_criterion(outputs, labels)
                 else: 
                     outputs = model(images)
-                    loss = criterion(outputs, labels)
+                    loss = eval_criterion(outputs, labels)
 
                 test_running_loss += loss.item() 
                 test_top1_5 = accuracy(outputs, labels, topk=(1, 5))
@@ -458,25 +458,19 @@ def Train_Eval_LT(args,
             else:
                 scheduler.step()
                 
-                
     epoch_results.append(f"\nAverage Epoch Time: {sum(epoch_times) / len(epoch_times):.4f}s")
     epoch_results.append(f"Max Top1 Accuracy: {max_accuracy:.4f}% at Epoch {max_epoch}")
     epoch_results.append(f"Max Balanced Accuracy: {max_bal_accuracy:.4f}% at Epoch {max_bal_epoch}")
 
-    
     return epoch_results
 
-"""
-Measuring Perplexity (PPL) for GPT Models. 
-- Validation loop use a "sliding window" 
-"""
 def Train_Eval_GPT(args, 
                    model: nn.Module, 
                    train_loader, 
                    test_loader, 
                    val_loader
                    ):
-    
+    """ Training & Evaluation Loop for GPT Language Modeling - Perplexity (PPL) Evaluation"""
     # Set Seed
     if args.seed != 0:
         set_seed(args.seed)
@@ -675,16 +669,6 @@ def Train_Eval_GPT(args,
 
     return epoch_results
 
-"""
-Training & Evaluation Loop for ImageNet1K Classification
-- Same training setting as Swin Transformer (Liu et al., 2021b). 
-- AdamW Optimizer + Cosine LR Scheduler + SoftTargetCrossEntropy Loss
-- Lr = 1e-3, Weight Decay = 0.05, Epochs = 300, Batch Size = 1024
-- Image Size = 224x224, Mixup & CutMix Augmentations
-
-Swin Transformer Config for Hyperparameters
-https://github.com/microsoft/Swin-Transformer/blob/main/config.py
-"""
 def Train_Eval_ImageNet(args, 
                         model: nn.Module, 
                         train_loader, 
@@ -694,6 +678,16 @@ def Train_Eval_ImageNet(args,
                         rank=0
                         ):
 
+    """
+    Training & Evaluation Loop for ImageNet1K Classification
+    - Same training setting as Swin Transformer (Liu et al., 2021b). 
+    - AdamW Optimizer + Cosine LR Scheduler + SoftTargetCrossEntropy Loss
+    - Lr = 1e-3, Weight Decay = 0.05, Epochs = 300, Batch Size = 1024
+    - Image Size = 224x224, Mixup & CutMix Augmentations
+
+    Swin Transformer Config for Hyperparameters
+    https://github.com/microsoft/Swin-Transformer/blob/main/config.py
+    """
     if args.seed != 0:
         set_seed(args.seed)
 
@@ -913,6 +907,10 @@ def Train_Eval_ImageNet(args,
 
     return epoch_results
 
+"""[Model Checkpointing Functions]
+- save_model: Saves the model state, optimizer state, scheduler state, and training metadata to a checkpoint file.
+- load_model: Loads the model state from a checkpoint file and returns the model. Also prints the epoch and best accuracy from the checkpoint.
+"""
 def save_model(model, args, optimizer, scheduler, epoch, last_accuracy, best_accuracy, checkpoint_path):
     torch.save({
         'epoch': epoch,
@@ -932,5 +930,4 @@ def load_model(model, checkpoint_path, device='cuda'):
 
     print(f"Loaded model from epoch {checkpoint['epoch']} with best accuracy {checkpoint['best_accuracy']:.4f}%")
     return model
-
 

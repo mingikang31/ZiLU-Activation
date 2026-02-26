@@ -344,10 +344,10 @@ class ResNet_CIFAR(nn.Module):
         self.args = args 
         self.num_classes = args.num_classes
         """
-        ResNet-20 Params: 0.27M
-        ResNet-32 Params: 0.46M
-        ResNet-44 Params: 0.66M
-        ResNet-56 Params: 0.85M
+        ResNet-20 Params: 0.278M
+        ResNet-32 Params: 0.466M
+        ResNet-44 Params: 0.661M
+        ResNet-56 Params: 0.855M
         """
         
         self.name = f"{args.model} - {args.activation}"

@@ -219,9 +219,10 @@ def Train_Eval(args,
                 if args.use_amp:
                     with autocast(device_type=args.device):
                         outputs = model(images)
+                        loss = eval_criterion(outputs, labels)
                 else: 
                     outputs = model(images)
-                loss = criterion(outputs, labels)
+                    loss = eval_criterion(outputs, labels)
                 test_running_loss += loss.item()
 
                 top1, top5 = accuracy(outputs, labels, topk=(1, 5))
@@ -410,9 +411,10 @@ def Train_Eval_LT(args,
                 if args.use_amp:
                     with autocast(device_type=args.device):
                         outputs = model(images)
+                        loss = criterion(outputs, labels)
                 else: 
                     outputs = model(images)
-                loss = criterion(outputs, labels)
+                    loss = criterion(outputs, labels)
 
                 test_running_loss += loss.item() 
                 test_top1_5 = accuracy(outputs, labels, topk=(1, 5))
@@ -848,10 +850,11 @@ def Train_Eval_ImageNet(args,
                 if args.use_amp:
                     with autocast(device_type=args.device, dtype=dtype):
                         outputs = model(images)
+                        loss = eval_criterion(outputs, labels)
                 else: 
                     outputs = model(images)
+                    loss = eval_criterion(outputs, labels)
                 
-                loss = eval_criterion(outputs, labels)
                 test_running_loss += loss.item()
 
                 top1, top5 = accuracy(outputs, labels, topk=(1, 5))

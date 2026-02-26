@@ -368,3 +368,24 @@ class DropPath(nn.Module):
         output = x.div(keep_prob) * random_tensor
         return output
 
+
+"""BatchNorm for ViT"""
+class ViTBatchNorm(nn.Module):
+    def __init__(self, num_features, eps=1e-5, momentum=0.1):
+        super().__init__()
+        # We use BatchNorm1d because our input is a 1D sequence of tokens
+        self.bn = nn.BatchNorm1d(num_features, eps=eps, momentum=momentum)
+
+    def forward(self, x):
+        # Incoming shape: (B, N, C)
+        
+        # 1. Permute to (B, C, N) for BatchNorm
+        x = x.transpose(1, 2) 
+        
+        # 2. Apply Batch Normalization
+        x = self.bn(x)
+        
+        # 3. Permute back to (B, N, C) for the Attention/MLP blocks
+        x = x.transpose(1, 2) 
+        
+        return x

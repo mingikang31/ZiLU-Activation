@@ -2,6 +2,7 @@
 import torch 
 import os 
 import sys
+import numpy as np
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt 
@@ -34,7 +35,6 @@ mixup_fn = Mixup(
     label_smoothing=0.1,  # Label smoothing
     num_classes=1000      # ImageNet classes
 )
-
 
 '''ImageNet1K Dataset Class'''
 class ImageNet1K:
@@ -224,6 +224,124 @@ class AddGaussianNoise(object):
         
     def __call__(self, tensor):
         return tensor + torch.randn(tensor.size()) * self.std + self.mean
+
+class CIFAR100_LT:
+    """
+    CIFAR-100 Long-Tailed Dataset.
+    Creates an imbalanced version of CIFAR-100 where the number of samples
+    per class follows an exponential decay controlled by `imb_factor`.
+    
+    imb_factor = 1/r where r is the imbalance ratio (e.g., 0.01 means 100:1 ratio).
+    """
+    def __init__(self, args):
+        self.CIFAR100_MEAN = (0.5071, 0.4867, 0.4408)
+        self.CIFAR100_STD = (0.2675, 0.2565, 0.2761)
+        self.cls_num = 100
+        self.imb_factor = getattr(args, 'imb_factor', 0.01)  # Default: 1/100 ratio
+        self.imb_type = getattr(args, 'imb_type', 'exp')      # 'exp' or 'step'
+
+        # Train Transformations
+        self.train_transform_list = []
+        if args.resize:
+            self.train_transform_list += [transforms.Resize((args.resize, args.resize))]
+        if args.augment:
+            self.train_transform_list += [
+                transforms.RandomCrop(args.resize if args.resize else 32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+            ]
+        self.train_transform_list += [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=self.CIFAR100_MEAN, std=self.CIFAR100_STD),
+        ]
+        if args.noise > 0.0:
+            self.train_transform_list += [AddGaussianNoise(mean=0., std=args.noise)]
+
+        # Test Transformations
+        self.test_transform_list = []
+        if args.resize:
+            self.test_transform_list += [transforms.Resize((args.resize, args.resize))]
+        self.test_transform_list += [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=self.CIFAR100_MEAN, std=self.CIFAR100_STD)
+        ]
+
+        train_transform = transforms.Compose(self.train_transform_list)
+        test_transform = transforms.Compose(self.test_transform_list)
+
+        # Load full CIFAR-100
+        full_train_data = datasets.CIFAR100(root=args.data_path, train=True, download=True, transform=train_transform)
+        self.test_data = datasets.CIFAR100(root=args.data_path, train=False, download=True, transform=test_transform)
+
+        # Generate imbalanced indices
+        targets = full_train_data.targets
+        imb_indices = self._get_imbalanced_indices(targets)
+        self.train_data = torch.utils.data.Subset(full_train_data, imb_indices)
+
+        # Print class distribution info
+        img_num_per_cls = self._get_img_num_per_cls(len(targets))
+        total_train = sum(img_num_per_cls)
+        print(f"[CIFAR-100-LT] imb_type={self.imb_type}, imb_factor={self.imb_factor}")
+        print(f"[CIFAR-100-LT] Max samples/class: {img_num_per_cls[0]}, Min samples/class: {img_num_per_cls[-1]}, Total training samples: {total_train}")
+
+        # Data Loaders
+        self.train_loader = DataLoader(
+            dataset=self.train_data,
+            batch_size=args.batch_size,
+            shuffle=True,
+            num_workers=args.num_workers,
+            persistent_workers=args.persistent_workers,
+            prefetch_factor=args.prefetch_factor,
+            pin_memory=args.pin_memory)
+
+        self.test_loader = DataLoader(
+            dataset=self.test_data,
+            batch_size=args.batch_size,
+            shuffle=False,
+            num_workers=args.num_workers,
+            persistent_workers=args.persistent_workers,
+            prefetch_factor=args.prefetch_factor,
+            pin_memory=args.pin_memory)
+
+        # Set image size and number of classes
+        self.img_size = (3, args.resize, args.resize) if args.resize else (3, 32, 32)
+        self.num_classes = 100
+
+    def _get_img_num_per_cls(self, data_length):
+        """Compute number of images per class given imbalance ratio."""
+        img_max = data_length / self.cls_num
+        img_num_per_cls = []
+        if self.imb_type == 'exp':
+            for cls_idx in range(self.cls_num):
+                num = img_max * (self.imb_factor ** (cls_idx / (self.cls_num - 1.0)))
+                img_num_per_cls.append(int(num))
+        elif self.imb_type == 'step':
+            for cls_idx in range(self.cls_num // 2):
+                img_num_per_cls.append(int(img_max))
+            for cls_idx in range(self.cls_num // 2):
+                img_num_per_cls.append(int(img_max * self.imb_factor))
+        else:
+            img_num_per_cls.extend([int(img_max)] * self.cls_num)
+        return img_num_per_cls
+
+    def _get_imbalanced_indices(self, targets):
+        """Return subsampled indices to create long-tailed distribution."""
+        np.random.seed(0)  # Fixed seed for reproducibility
+        targets_np = np.array(targets, dtype=np.int64)
+        classes = np.unique(targets_np)
+        img_num_per_cls = self._get_img_num_per_cls(len(targets))
+
+        new_indices = []
+        for the_class, the_img_num in zip(classes, img_num_per_cls):
+            idx = np.where(targets_np == the_class)[0]
+            np.random.shuffle(idx)
+            selec_idx = idx[:the_img_num]
+            new_indices.extend(selec_idx.tolist())
+        return new_indices
+
+    def shape(self):
+        return self.train_data[0][0].shape
+
 
 class CIFAR100(datasets.CIFAR100): 
     def __init__(self, args): 

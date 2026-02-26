@@ -1,5 +1,6 @@
 library(ggplot2)
 library(tidyverse)
+library(zoo)
 
 setwd("~/Developer/ZiLU-Activation/Output/csv/LR-ResNet34")
 
@@ -10,43 +11,88 @@ cifar10_train = read.csv("CIFAR10_activations_train_loss.csv")
 cifar100_test = read.csv("CIFAR100_activations_test_loss.csv")
 cifar100_train = read.csv("CIFAR100_activations_train_loss.csv")
 
-## [CIFAR10]
-# Test Loss CIFAR10
-plot_cifar10_test <- cifar10_test %>%
+
+## cifar_100_test_loss.png code
+# cifar_100_test <- cifar100_test %>%
+#     pivot_longer(
+#         cols = -epoch,
+#         names_to = c("activation", "lr"),
+#         values_to = "loss",
+#         names_pattern = "^(.+?)\\.lr(.+?)\\.test$"
+#     ) %>%
+#     filter(
+#         activation %in% c("relu", "silu", "gelu", "zailuapproxsigma1.0", "zailusigma1.0")
+#     )
+
+# print(head(cifar_100_test))
+# print(unique(cifar_100_test$activation))
+
+
+# p1 = ggplot(cifar_100_test, aes(x = epoch, y = loss, color = activation)) +
+#     geom_line(linewidth = 1) +
+#     facet_wrap(~lr, ncol = 2, scales = "free_y") +
+#     labs(
+#         title = "CIFAR 100 ResNet34 Test Loss Curves",
+#         x = "Epoch",
+#         y = "Test Loss",
+#         color = "Activation"
+#     ) +
+#     theme_bw() +
+#     theme(legend.position = "right")
+
+# ggsave(
+#     filename = "cifar_100_test_loss.png",
+#     plot = p1,
+#     width = 8, # Width in inches
+#     height = 6, # Height in inches
+#     units = "in", # Units ("in", "cm", "mm")
+#     dpi = 300, # Resolution (300 is standard for print)
+#     bg = "white" # Background color (prevents transparent backgrounds)
+# )
+
+
+# Doing LR = 1e-4
+cifar_100_test <- cifar100_test %>%
     pivot_longer(
         cols = -epoch,
         names_to = c("activation", "lr"),
         values_to = "loss",
-        names_pattern = "(.*)_lr([^_]+)_test_loss"
+        names_pattern = "^(.+?)\\.lr(.+?)\\.test$"
+    ) %>%
+    filter(
+        activation %in% c("relu", "silu", "gelu", "zailusigma0.1", "zailusigma0.5", "zailusigma1.0", "zailusigma5.0", "zailusigma10.0"),
+        lr == "1e.4"
+    ) %>%
+    mutate(
+        loss = rollmean(loss, k = 10, fill = NA)
     ) %>%
     filter (
-      activation %in% c("relu", "silu", "gelu", "zilu_approx_sigma1.0", "zilu_sigma1.0")
+        epoch > 100
     )
 
+print(head(cifar_100_test))
+print(unique(cifar_100_test$activation))
 
 
-# Check if the pivot worked correctly
-
-p1 <- ggplot(plot_cifar10_test, aes(x = epoch, y = loss, color = factor(activation))) +
+p1 <- ggplot(cifar_100_test, aes(x = epoch, y = loss, color = activation)) +
     geom_line(linewidth = 1) +
-    facet_wrap(~lr, ncol = 2) +
     labs(
-        title = "CIFAR 10 ResNet34 Test Loss Curves",
+        title = "CIFAR 100 ResNet34 Test Loss Curves",
         x = "Epoch",
         y = "Test Loss",
         color = "Activation"
     ) +
     theme_bw() +
     theme(legend.position = "right")
-print(p1)
-
 
 ggsave(
-    filename = "cifar_10_test_loss.png",
+    filename = "cifar_100_lr1e-4_test_loss.png",
     plot = p1,
     width = 8, # Width in inches
-    height = 6, # Height in inches
+    height = 10, # Height in inches
     units = "in", # Units ("in", "cm", "mm")
     dpi = 300, # Resolution (300 is standard for print)
     bg = "white" # Background color (prevents transparent backgrounds)
 )
+
+

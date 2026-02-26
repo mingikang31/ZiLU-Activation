@@ -9,8 +9,8 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
 
 # Datasets and Eval 
-from train_eval import Train_Eval, Train_Eval_ImageNet, setup_distributed, cleanup_distributed
-from dataset import CIFAR10, CIFAR100, ImageNet1K, mixup_fn
+from train_eval import Train_Eval, Train_Eval_LT, Train_Eval_ImageNet, setup_distributed, cleanup_distributed
+from dataset import CIFAR10, CIFAR100, CIFAR100_LT, ImageNet1K, mixup_fn
 
 # Models 
 from Models.vgg import VGG
@@ -61,12 +61,16 @@ def args_parser():
     parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'resnet50', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-base'], help='Model architecture')
 
     # Arguments for Data 
-    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100", "imagenet1k"], help="Dataset to use for training and evaluation")
+    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100", "cifar100-lt", "imagenet1k"], help="Dataset to use for training and evaluation")
     parser.add_argument("--resize", type=int, default=None, help="Resize images to 224x224")
     parser.add_argument("--augment", action="store_true", help="Use data augmentation")
     parser.set_defaults(augment=False)
     parser.add_argument("--noise", type=float, default=0.0, help="Standard deviation of Gaussian noise to add to the data")
     parser.add_argument("--data_path", type=str, default="/mnt/research/j.farias/mkang2/Datasets", help="Path to the dataset")
+
+    # Imbalanced Dataset Arguments (Only for CIFAR-100-LT)
+    parser.add_argument("--imb_factor", type=float, default=0.01, help="Imbalance factor for long-tailed datasets (1/ratio, e.g. 0.01 = 100:1)")
+    parser.add_argument("--imb_type", type=str, default="exp", choices=["exp", "step"], help="Imbalance type: exponential or step")
 
     # Training Arguments
     parser.add_argument("--compile", action="store_true", help="Use compiled model for training and evaluation")
@@ -141,6 +145,10 @@ def main(args):
         dataset = CIFAR100(args)
         args.num_classes = dataset.num_classes 
         args.img_size = dataset.img_size 
+    elif args.dataset == "cifar100-lt":
+        dataset = CIFAR100_LT(args)
+        args.num_classes = dataset.num_classes 
+        args.img_size = dataset.img_size
     elif args.dataset == "imagenet1k":
         args.batch_size = 1024 # Standard Batch Size for ImageNet-1K
         args.augment = True
@@ -240,6 +248,11 @@ def main(args):
                                         model, 
                                         dataset.train_loader, 
                                         dataset.test_loader
+                                        )
+        elif args.dataset == "cifar100-lt":
+            train_eval_results = Train_Eval_LT(args, 
+                                        model, 
+                                        dataset
                                         )
         elif args.dataset == "imagenet1k":
             train_eval_results = Train_Eval_ImageNet(

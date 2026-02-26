@@ -219,10 +219,10 @@ def Train_Eval(args,
                 if args.use_amp:
                     with autocast(device_type=args.device):
                         outputs = model(images)
-                        loss = eval_criterion(outputs, labels)
+                        loss = criterion(outputs, labels)
                 else: 
                     outputs = model(images)
-                    loss = eval_criterion(outputs, labels)
+                    loss = criterion(outputs, labels)
                 test_running_loss += loss.item()
 
                 top1, top5 = accuracy(outputs, labels, topk=(1, 5))
@@ -275,13 +275,20 @@ def Train_Eval_LT(args,
 
     # Loss Criterion
     if args.criterion == 'CrossEntropy':
-        img_num_per_cls = dataset._get_img_num_per_cls(len(dataset.train_data.dataset.targets))
-        cls_weights = 1.0 / torch.tensor(img_num_per_cls, dtype=torch.float32)
+        train_targets = [dataset.train_data.datset.targets[i] for i in dataset.train_data.indices]
+        img_num_per_cls = [0] * num_classes 
+        for label in train_targets:
+            img_num_per_cls[label] += 1
+        cls_weights = 1.0 / torch.tensor(img_num_per_cls, dtype=torch.float32).clamp(min=1.0)
         cls_weights = cls_weights / cls_weights.sum() * len(img_num_per_cls)  # Normalize to num_classes
         criterion = nn.CrossEntropyLoss(weight=cls_weights.to(args.device))
+        
+        print(f"[DEBUG] Class weight range: min={cls_weights.min():.4f}, max={cls_weights.max():.4f}, ratio={cls_weights.max()/cls_weights.min():.1f}")
+        print(f"[DEBUG] Samples per class range: min={min(img_num_per_cls)}, max={max(img_num_per_cls)}, total={sum(img_num_per_cls)}")
+        
     elif args.criterion == 'MSE':
         criterion = nn.MSELoss()
-            
+        
     # Optimizer 
     if args.optimizer == 'adam':
         optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)

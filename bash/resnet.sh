@@ -67,7 +67,7 @@ FAILED=0
 
 
 # # Vary Sigmas 
-DATASETS=("cifar10" "cifar100")
+DATASETS=("cifar100")
 ACTIVATIONS=('arctan' 'arctan_approx')
 LR="1e-3"
 SIGMAS=("0.01" "0.05" "0.1" "0.5" "1.0" "5.0" "10.0" "50.0" "100.0" "500.0" "1000.0")

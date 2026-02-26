@@ -275,7 +275,7 @@ def Train_Eval_LT(args,
 
     # Loss Criterion
     if args.criterion == 'CrossEntropy':
-        train_targets = [dataset.train_data.datset.targets[i] for i in dataset.train_data.indices]
+        train_targets = [dataset.train_data.dataset.targets[i] for i in dataset.train_data.indices]
         img_num_per_cls = [0] * num_classes 
         for label in train_targets:
             img_num_per_cls[label] += 1

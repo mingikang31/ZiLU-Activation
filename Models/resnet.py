@@ -336,3 +336,121 @@ class BottleNeck(nn.Module):
         out = self.final_activation(out)
 
         return out
+
+
+class ResNet_CIFAR(nn.Module):
+    def __init__(self, args):
+        super(ResNet_CIFAR, self).__init__()
+        self.args = args 
+        self.num_classes = args.num_classes
+        """
+        ResNet-20 Params: 0.27M
+        ResNet-32 Params: 0.46M
+        ResNet-44 Params: 0.66M
+        ResNet-56 Params: 0.85M
+        """
+        
+        self.name = f"{args.model} - {args.activation}"
+
+        # Activation Selection
+        self.activation = args.activation
+
+        # Activation function mapping
+        self.activation_map = {
+            "relu": lambda: nn.ReLU(inplace=args.inplace), 
+            "silu": lambda: nn.SiLU(inplace=args.inplace), 
+            "gelu": lambda: nn.GELU(), 
+            "sigmoid": lambda: nn.Sigmoid(), 
+
+            # Previous Activation Generation
+            "gelu_s": lambda: GELU_s(sigma=args.sigma, inplace=args.inplace), 
+            "silu_s": lambda: SiLU_s(sigma=args.sigma, inplace=args.inplace), 
+            "zilu_old": lambda: ZiLU_Old(sigma=args.sigma, inplace=args.inplace), 
+
+            # Current Activation Generation 
+            "arctan": lambda: ArcTan(sigma=args.sigma), 
+            "arctan_approx": lambda: ArcTan_Approx(sigma=args.sigma), 
+            "zilu": lambda: ZiLU(sigma=args.sigma), 
+            "zilu_approx": lambda: ZiLU_Approx(sigma=args.sigma), 
+            "squareplus": lambda: SquarePlus(beta=4),
+
+            # Other Activations
+            "leaky_relu": lambda: nn.LeakyReLU(inplace=args.inplace), 
+            "prelu": lambda: nn.PReLU(), 
+            "elu": lambda: nn.ELU(inplace=args.inplace), 
+            "hardshrink": lambda: nn.Hardshrink(), 
+            "softshrink": lambda: nn.Softshrink(), 
+            "tanhshrink": lambda: nn.Tanhshrink(), 
+            "softplus": lambda: nn.Softplus(),
+            "softsign": lambda: nn.Softsign(), 
+            "tanh": lambda: nn.Tanh(),
+            "celu": lambda: nn.CELU(inplace=args.inplace),
+            "mish": lambda: nn.Mish(inplace=args.inplace), 
+            "hardswish": lambda: nn.Hardswish(inplace=args.inplace), 
+            "hardsigmoid": lambda: nn.Hardsigmoid(inplace=args.inplace),
+            "selu": lambda: nn.SELU(inplace=args.inplace), 
+            "hardtanh": lambda: nn.Hardtanh(inplace=args.inplace), 
+            "identity": lambda: nn.Identity()
+        }
+        
+        if self.activation not in self.activation_map:
+            raise ValueError(f"Unsupported activation function: {self.activation}")
+            
+        self.activation_first_conv = self.activation_map[self.activation]()
+
+        self.first_conv = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(16), 
+            self.activation_first_conv
+            )
+
+        if args.model == 'resnet20':
+            n = 3 
+        elif args.model == 'resnet32':
+            n = 5
+        elif args.model == 'resnet44':
+            n = 7
+        elif args.model == 'resnet56':
+            n = 9
+        else: 
+            raise ValueError("Invalid ResNet model type")
+
+        self.in_channels = 16 
+        block = ResBlock 
+        self.layer1 = self._make_layer(block, 16, n, stride=1)
+        self.layer2 = self._make_layer(block, 32, n, stride=2)
+        self.layer3 = self._make_layer(block, 64, n, stride=2)
+
+        self.classifier = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(start_dim=1),
+            nn.Linear(64, self.num_classes)
+        )
+
+    def _make_layer(self, block, out_channels, blocks, stride=1):
+        layers = [] 
+
+        # First block handles stride and channel chang
+        layers.append(block(self.args, self.in_channels, out_channels, stride=stride))
+        self.in_channels = out_channels
+
+        for _ in range(1, blocks):
+            layers.append(block(self.args, self.in_channels, out_channels, stride=1))
+
+        return nn.Sequential(*layers)
+
+    def parameter_count(self): 
+        total_params = sum(p.numel() for p in self.parameters())
+        trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        return total_params, trainable_params
+
+    def forward(self, x):
+        x = self.first_conv(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+
+        x = self.classifier(x)
+
+        return x

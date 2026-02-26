@@ -14,7 +14,7 @@ from dataset import CIFAR10, CIFAR100, CIFAR100_LT, ImageNet1K, mixup_fn
 
 # Models 
 from Models.vgg import VGG
-from Models.resnet import ResNet
+from Models.resnet import ResNet, ResNet_CIFAR
 from Models.vit import ViT
 
 # Utils 
@@ -58,7 +58,7 @@ def args_parser():
     parser.add_argument('--inplace', action='store_true', help='Use inplace activation functions')
     parser.set_defaults(inplace=False)
 
-    parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'resnet50', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-base'], help='Model architecture')
+    parser.add_argument('--model', type=str, default='vgg11', choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'resnet18', 'resnet34', 'resnet50', 'resnet20', 'resnet32', 'resnet44', 'resnet56', 'vit-tiny', 'vit-small', 'vit-medium', 'vit-base'], help='Model architecture')
 
     # Arguments for Data 
     parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "cifar100", "cifar100-lt", "imagenet1k"], help="Dataset to use for training and evaluation")
@@ -171,7 +171,9 @@ def main(args):
     # ResNet
     if args.model in ["resnet18", "resnet34", "resnet50"]:
         model = ResNet(args)        
-
+    if args.model in ['resnet20', 'resnet32', 'resnet44', 'resnet56']:
+        model = ResNet_CIFAR(args)
+        
     # ViT 
     if args.model == "vit-tiny":
         args.patch_size = 16

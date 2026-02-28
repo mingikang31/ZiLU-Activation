@@ -1,0 +1,166 @@
+training: False
+_parameters: {}
+_buffers: {}
+_non_persistent_buffers_set: set()
+_backward_pre_hooks: OrderedDict()
+_backward_hooks: OrderedDict()
+_is_full_backward_hook: None
+_forward_hooks: OrderedDict()
+_forward_hooks_with_kwargs: OrderedDict()
+_forward_hooks_always_called: OrderedDict()
+_forward_pre_hooks: OrderedDict()
+_forward_pre_hooks_with_kwargs: OrderedDict()
+_state_dict_hooks: OrderedDict()
+_state_dict_pre_hooks: OrderedDict()
+_load_state_dict_pre_hooks: OrderedDict()
+_load_state_dict_post_hooks: OrderedDict()
+_modules: {'activation_first_conv': SiLU(inplace=True), 'first_conv': Sequential(
+  (0): Conv2d(3, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+  (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (2): SiLU(inplace=True)
+), 'layer1': Sequential(
+  (0): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (1): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (2): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(16, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+), 'layer2': Sequential(
+  (0): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Sequential(
+      (0): Conv2d(16, 32, kernel_size=(1, 1), stride=(2, 2), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+  )
+  (1): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (2): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+), 'layer3': Sequential(
+  (0): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Sequential(
+      (0): Conv2d(32, 64, kernel_size=(1, 1), stride=(2, 2), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+  )
+  (1): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+  (2): ResBlock(
+    (activation1): SiLU(inplace=True)
+    (final_activation): SiLU(inplace=True)
+    (layer1): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): SiLU(inplace=True)
+    )
+    (layer2): Sequential(
+      (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (identity): Identity()
+  )
+), 'classifier': Sequential(
+  (0): AdaptiveAvgPool2d(output_size=(1, 1))
+  (1): Flatten(start_dim=1, end_dim=-1)
+  (2): Linear(in_features=64, out_features=100, bias=True)
+)}
+args: Namespace(activation='silu', sigma=None, inplace=True, model='resnet20', dataset='cifar100-lt', resize=None, augment=True, noise=0.0, data_path='./Data', imb_factor=0.01, imb_type='exp', compile=False, compile_mode='default', batch_size=128, num_epochs=200, use_amp=False, clip_grad_norm=1.0, num_workers=12, persistent_workers=False, prefetch_factor=None, pin_memory=True, criterion='CrossEntropy', optimizer='adamw', momentum=0.9, weight_decay=0.01, lr=0.001, lr_step=20, lr_gamma=0.1, scheduler='cosine', device='cuda', seed=42, output_dir='./Output/AUG/ResNet20/CIFAR100-LT/0.01/silu_s42', test_only=False, ddp=False, ddp_batch_size=128, num_classes=100, img_size=(3, 32, 32), total_params=278324, trainable_params=278324)
+num_classes: 100
+name: resnet20 - silu
+activation: silu
+activation_map: {'relu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150c0c006160>, 'silu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5d2a20>, 'gelu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5d2ac0>, 'sigmoid': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5d2980>, 'gelu_s': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5d28e0>, 'silu_s': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5d2d40>, 'zilu_old': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5d3600>, 'arctan': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5d37e0>, 'arctan_approx': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578040>, 'zilu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5780e0>, 'zilu_approx': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578180>, 'squareplus': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578220>, 'leaky_relu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5782c0>, 'prelu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578360>, 'elu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578400>, 'hardshrink': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5784a0>, 'softshrink': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578540>, 'tanhshrink': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5785e0>, 'softplus': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578680>, 'softsign': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578720>, 'tanh': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5787c0>, 'celu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578860>, 'mish': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578900>, 'hardswish': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd5789a0>, 'hardsigmoid': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578a40>, 'selu': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578ae0>, 'hardtanh': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578b80>, 'identity': <function ResNet_CIFAR.__init__.<locals>.<lambda> at 0x150bbd578c20>}
+in_channels: 64

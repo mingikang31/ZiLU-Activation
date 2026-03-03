@@ -137,7 +137,7 @@ class FourierFeatureEncoding(nn.Module):
 # =============================================================================
 # Cell 7: Training Function
 # =============================================================================
-def train(model, image, dataloader, device, output_dir, lr=1e-4, total_steps=2000):
+def train(model, image, dataloader, device, output_dir, lr=1e-4, total_steps=15000):
     os.makedirs(output_dir, exist_ok=True)
 
     steps_til_summary = 100
@@ -398,7 +398,7 @@ model_siren = Siren(
 ).to(device)
 print(f"SIREN params: {count_params(model_siren):,}")
 results_A['SIREN'] = train(model_siren, img, dataloader, device=device,
-                           output_dir="./expA_siren/", lr=1e-4, total_steps=2000)
+                           output_dir="./expA_siren/", lr=1e-4, total_steps=15000)
 
 # --- ReLU (no encoding) ---
 set_seed(42)
@@ -411,7 +411,7 @@ model_relu_A = INR(
 ).to(device)
 print(f"ReLU params: {count_params(model_relu_A):,}")
 results_A['ReLU'] = train(model_relu_A, img, dataloader, device=device,
-                          output_dir="./expA_relu/", lr=1e-4, total_steps=2000)
+                          output_dir="./expA_relu/", lr=1e-4, total_steps=15000)
 
 # --- GELU (no encoding) ---
 set_seed(42)
@@ -424,7 +424,7 @@ model_gelu_A = INR(
 ).to(device)
 print(f"GELU params: {count_params(model_gelu_A):,}")
 results_A['GELU'] = train(model_gelu_A, img, dataloader, device=device,
-                          output_dir="./expA_gelu/", lr=1e-4, total_steps=2000)
+                          output_dir="./expA_gelu/", lr=1e-4, total_steps=15000)
 
 # --- SiLU (no encoding) ---
 set_seed(42)
@@ -437,7 +437,7 @@ model_silu_A = INR(
 ).to(device)
 print(f"SiLU params: {count_params(model_silu_A):,}")
 results_A['SiLU'] = train(model_silu_A, img, dataloader, device=device,
-                          output_dir="./expA_silu/", lr=1e-4, total_steps=2000)
+                          output_dir="./expA_silu/", lr=1e-4, total_steps=15000)
 
 # --- ZiLU (no encoding) ---
 set_seed(42)
@@ -450,7 +450,7 @@ model_zailu_A = INR(
 ).to(device)
 print(f"ZiLU params: {count_params(model_zailu_A):,}")
 results_A['ZiLU'] = train(model_zailu_A, img, dataloader, device=device,
-                          output_dir="./expA_zailu/", lr=1e-4, total_steps=2000)
+                          output_dir="./expA_zailu/", lr=1e-4, total_steps=15000)
 
 # --- ZiLU-Approx (no encoding) ---
 set_seed(42)
@@ -463,7 +463,7 @@ model_zailu_approx_A = INR(
 ).to(device)
 print(f"ZiLU-Approx params: {count_params(model_zailu_approx_A):,}")
 results_A['ZiLU-Approx'] = train(model_zailu_approx_A, img, dataloader, device=device,
-                                  output_dir="./expA_zailu_approx/", lr=1e-4, total_steps=2000)
+                                  output_dir="./expA_zailu_approx/", lr=1e-4, total_steps=15000)
 
 
 # =============================================================================
@@ -497,7 +497,7 @@ model_sine_B = INR(
 ).to(device)
 print(f"Sine params: {count_params(model_sine_B):,}")
 results_B['Sine'] = train(model_sine_B, img, dataloader, device=device,
-                          output_dir="./expB_sine/", lr=1e-3, total_steps=2000)
+                          output_dir="./expB_sine/", lr=1e-3, total_steps=15000)
 
 # --- ReLU ---
 set_seed(42)
@@ -510,7 +510,7 @@ model_relu_B = INR(
 ).to(device)
 print(f"ReLU params: {count_params(model_relu_B):,}")
 results_B['ReLU'] = train(model_relu_B, img, dataloader, device=device,
-                          output_dir="./expB_relu/", lr=1e-3, total_steps=2000)
+                          output_dir="./expB_relu/", lr=1e-3, total_steps=15000)
 
 # --- GELU ---
 set_seed(42)
@@ -523,7 +523,7 @@ model_gelu_B = INR(
 ).to(device)
 print(f"GELU params: {count_params(model_gelu_B):,}")
 results_B['GELU'] = train(model_gelu_B, img, dataloader, device=device,
-                          output_dir="./expB_gelu/", lr=1e-3, total_steps=2000)
+                          output_dir="./expB_gelu/", lr=1e-3, total_steps=15000)
 
 # --- SiLU ---
 set_seed(42)
@@ -536,7 +536,7 @@ model_silu_B = INR(
 ).to(device)
 print(f"SiLU params: {count_params(model_silu_B):,}")
 results_B['SiLU'] = train(model_silu_B, img, dataloader, device=device,
-                          output_dir="./expB_silu/", lr=1e-3, total_steps=2000)
+                          output_dir="./expB_silu/", lr=1e-3, total_steps=15000)
 
 # --- ZiLU ---
 set_seed(42)
@@ -549,7 +549,7 @@ model_zailu_B = INR(
 ).to(device)
 print(f"ZiLU params: {count_params(model_zailu_B):,}")
 results_B['ZiLU'] = train(model_zailu_B, img, dataloader, device=device,
-                          output_dir="./expB_zailu/", lr=1e-3, total_steps=2000)
+                          output_dir="./expB_zailu/", lr=1e-3, total_steps=15000)
 
 # --- ZiLU-Approx ---
 set_seed(42)
@@ -562,7 +562,7 @@ model_zailu_approx_B = INR(
 ).to(device)
 print(f"ZiLU-Approx params: {count_params(model_zailu_approx_B):,}")
 results_B['ZiLU-Approx'] = train(model_zailu_approx_B, img, dataloader, device=device,
-                                  output_dir="./expB_zailu_approx/", lr=1e-3, total_steps=2000)
+                                  output_dir="./expB_zailu_approx/", lr=1e-3, total_steps=15000)
 
 
 # =============================================================================

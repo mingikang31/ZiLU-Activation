@@ -444,7 +444,7 @@ set_seed(42)
 model_zailu_A = INR(
     in_features=2, out_features=1,
     hidden_features=256, hidden_layers=3,
-    activation_fn_factory=lambda: ZiLU(sigma=5.0),
+    activation_fn_factory=lambda: ZiLU(sigma=1.0),
     encoding=None,
     outermost_linear=True, init='xavier'
 ).to(device)
@@ -457,7 +457,7 @@ set_seed(42)
 model_zailu_approx_A = INR(
     in_features=2, out_features=1,
     hidden_features=256, hidden_layers=3,
-    activation_fn_factory=lambda: ZiLU_Approx(sigma=5.0),
+    activation_fn_factory=lambda: ZiLU_Approx(sigma=1.0),
     encoding=None,
     outermost_linear=True, init='xavier'
 ).to(device)
@@ -543,7 +543,7 @@ set_seed(42)
 model_zailu_B = INR(
     in_features=2, out_features=1,
     hidden_features=256, hidden_layers=3,
-    activation_fn_factory=lambda: ZiLU(sigma=5.0),
+    activation_fn_factory=lambda: ZiLU(sigma=1.0),
     encoding=SHARED_ENCODING,
     outermost_linear=True, init='xavier'
 ).to(device)
@@ -556,7 +556,7 @@ set_seed(42)
 model_zailu_approx_B = INR(
     in_features=2, out_features=1,
     hidden_features=256, hidden_layers=3,
-    activation_fn_factory=lambda: ZiLU_Approx(sigma=5.0),
+    activation_fn_factory=lambda: ZiLU_Approx(sigma=1.0),
     encoding=SHARED_ENCODING,
     outermost_linear=True, init='xavier'
 ).to(device)

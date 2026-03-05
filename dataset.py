@@ -279,10 +279,10 @@ class CIFAR100_LT:
         self.train_data = torch.utils.data.Subset(full_train_data, imb_indices)
 
         # Print class distribution info
-        img_num_per_cls = self._get_img_num_per_cls(len(targets))
-        total_train = sum(img_num_per_cls)
-        print(f"[CIFAR-100-LT] imb_type={self.imb_type}, imb_factor={self.imb_factor}")
-        print(f"[CIFAR-100-LT] Max samples/class: {img_num_per_cls[0]}, Min samples/class: {img_num_per_cls[-1]}, Total training samples: {total_train}")
+        # img_num_per_cls = self._get_img_num_per_cls(len(targets))
+        # total_train = sum(img_num_per_cls)
+        # print(f"[CIFAR-100-LT] imb_type={self.imb_type}, imb_factor={self.imb_factor}")
+        # print(f"[CIFAR-100-LT] Max samples/class: {img_num_per_cls[0]}, Min samples/class: {img_num_per_cls[-1]}, Total training samples: {total_train}")
 
         # Data Loaders
         self.train_loader = DataLoader(

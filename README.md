@@ -1,18 +1,16 @@
-# ZiLU-Activation
-ZiLU Activation Function for Vision and Language Models 
-
+# IGLU: Integrated Gaussian Linear Unit 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Project Periods:** Fall 2025, Spring 2026 
 
 ## Overview
-Through the introduction of transformer architectures, GELU and SiLU, a sooth, non-linear activation functions proved to show competitive advantages over ReLU in certain situations. This repository contains code for **ZiLU**, a novel activation function that generalizes ReLU, GELU, and SiLU, taking inspiration from GELU's Gaussian Error Phi Gating Function. Similar to GELU and SiLU, ZiLU employs an arctan (and approximation) as the gating function with controllable parameter sigma. 
+Through the introduction of transformer architectures, GELU and SiLU, a sooth, non-linear activation functions proved to show competitive advantages over ReLU in certain situations. This repository contains code for **IGLU**, a novel activation function that generalizes ReLU, GELU, and SiLU, taking inspiration from GELU's Gaussian Error Phi Gating Function. Similar to GELU and SiLU, ZiLU employs an arctan (and approximation) as the gating function with controllable parameter sigma. 
 
 This repository explores image classification on CIFAR-10/100 datasets for vision models and WikiText103 dataset for language models for perplexity measurements. 
 
 ### Key Concepts
-- **ZiLU Activation Function**: Any standard neural network architecture can be adapted to use ZiLU activation function in place of traditional activation functions. 
-- **ZiLU Approximation**: To reduce the computational burden of the arctan calculations, we provide *ZiLU-Approximation* that is faster to compute and almost identical to the original ZiLU formulation. 
+- **IGLU Activation Function**: Any standard neural network architecture can be adapted to use IGLU activation function in place of traditional activation functions. 
+- **IGLU Approximation**: To reduce the computational burden of the arctan calculations, we provide *IGLU-Approximation* that is faster to compute and almost identical to the original ZiLU formulation. 
 - **Controlable Sigma Parameter**: Sigma parameter for *ZiLU* and *ZiLU-Approximate* allows for full control of model architecture. 
 - **Vision Models**: This repository provides implementation of VGG, ResNet, Vision Transformer architectures for cross vision model evaluation. 
 - **Language Models**: This repository provides implementation of GPT2 architecture for evaluating language models. 
@@ -24,8 +22,8 @@ This repository explores image classification on CIFAR-10/100 datasets for visio
 **ZiLU and ZiLU Approximation (`activation.py`)**: The proposed activation function that generalizes ReLU, GELU, and SiLU. 
 - **`ArcTan`**: ArcTan gating function used in `ZiLU`. 
 - **`ArcTan_Approx`**: ArcTan gating function used in `ZiLU_Approx`.
-- **`ZiLU`**: ZiLU activation function with ArcTan gating function. 
-- **`ZiLU_Approx`**: ZiLU Approximation activation function with ArcTan Approximation gating function. 
+- **`IGLU`**: ZiLU activation function with ArcTan gating function. 
+- **`IGLU_Approx`**: ZiLU Approximation activation function with ArcTan Approximation gating function. 
 
 ## Installation
 ```shell
@@ -253,8 +251,8 @@ After running training, the following files are saved in `--output_dir`:
 - **`SiLU_s`**
 - **`ArcTan`**
 - **`ArcTan_Approx`**
-- **`ZiLU`**
-- **`ZiLU_Approx`**
+- **`IGLU`**
+- **`IGLU_Approx`**
 
 ## Notes
 
